@@ -19,7 +19,7 @@
  # may, on the other hand, be outside the repository if the user has 
  # created a separate project directory where they wish to put build-
  # and run-scripts as well as executables.
- setenv CMAQ_HOME $cwd
+ setenv CMAQ_HOME /mnt/HA/groups/cappsGrp/users/el662/CMAQ_REPO_V532
 
  # CMAQ_REPO - this is always the location of the CMAQ repository that
  # the user will pull from to create exectuables. If the user is building
