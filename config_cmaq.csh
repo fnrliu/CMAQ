@@ -25,12 +25,12 @@
  # the user will pull from to create exectuables. If the user is building
  # CMAQ inside the repository then it will be equal to CMAQ_HOME. If not,
  # the user must supply an alternative folder locaiton.
- setenv CMAQ_REPO $CMAQ_HOME
+ setenv CMAQ_REPO /mnt/HA/groups/cappsGrp/users/el662/CMAQ_REPO_V532
 
  # CMAQ_DATA - this may be where the input data are located. It may be a 
  # symbolic link to another location on the system, but it should be
  # provided here 
- setenv CMAQ_DATA $CMAQ_HOME/data
+ setenv CMAQ_DATA /mnt/HA/groups/cappsGrp/users/el662/CMAQ_REPO_V532/data/
  if ( ! -d $CMAQ_DATA ) mkdir -p $CMAQ_DATA
 
  cd $CMAQ_HOME
@@ -80,25 +80,25 @@
     case intel:
     
         #> I/O API, netCDF, and MPI library locations
-        setenv IOAPI_INCL_DIR   ioapi_inc_intel    #> I/O API include header files
-        setenv IOAPI_LIB_DIR    ioapi_lib_intel    #> I/O API libraries
-        setenv NETCDF_LIB_DIR   netcdf_lib_intel   #> netCDF C directory path
-        setenv NETCDF_INCL_DIR  netcdf_inc_intel   #> netCDF C directory path
-        setenv NETCDFF_LIB_DIR  netcdff_lib_intel  #> netCDF Fortran directory path
-        setenv NETCDFF_INCL_DIR netcdff_inc_intel  #> netCDF Fortran directory path
-        setenv MPI_LIB_DIR      mpi_lib_intel      #> MPI directory path
+        setenv IOAPI_INCL_DIR   /mnt/HA/groups/cappsGrp/lib/ioapi/Linux2_x86_64ifort    #> I/O API include header files
+        setenv IOAPI_LIB_DIR    /mnt/HA/groups/cappsGrp/lib/ioapi    #> I/O API libraries
+        setenv NETCDF_LIB_DIR   /mnt/HA/groups/cappsGrp/lib/netcdf/lib   #> netCDF C directory path
+        setenv NETCDF_INCL_DIR  /mnt/HA/groups/cappsGrp/lib/netcdf/include   #> netCDF C directory path
+        setenv NETCDFF_LIB_DIR  /mnt/HA/groups/cappsGrp/lib/netcdf/lib  #> netCDF Fortran directory path
+        setenv NETCDFF_INCL_DIR /mnt/HA/groups/cappsGrp/lib/netcdf/include  #> netCDF Fortran directory path
+        setenv MPI_LIB_DIR      /mnt/HA/opt/openmpi/intel/2015/1.8.1-mlnx-ofed/      #> MPI directory path
     
         #> Compiler Aliases and Flags
         #> set the compiler flag -qopt-report=5 to get a model optimization report in the build directory with the optrpt extension
-        setenv myFC mpiifort
+        setenv myFC mpifort
         setenv myCC icc       
-        setenv myFSTD "-O3 -fno-alias -mp1 -fp-model source -ftz -simd -align all -xHost -vec-guard-write -unroll-aggressive"
+        setenv myFSTD "-O3 -xHost -fno-alias -mp1 -fp-model source"
         setenv myDBG  "-O0 -g -check bounds -check uninit -fpe0 -fno-alias -ftrapuv -traceback"
-        setenv myLINK_FLAG #"-qopenmp-simd" openMP not supported w/ CMAQ
+        setenv myLINK_FLAG "-openmp" #"-qopenmp-simd" openMP not supported w/ CMAQ
         setenv myFFLAGS "-fixed -132"
-        setenv myFRFLAGS "-free"
-        setenv myCFLAGS "-O2"
-        setenv extra_lib "-lcurl"
+        setenv myFRFLAGS "-free -O3 -xHost -qopenmp"
+        setenv myCFLAGS "-O3 -xHost -qopenmp"
+        setenv extra_lib "-Wl,-rpath,/mnt/HA/opt/netcdf/intel/2015/4.5.0/lib  -Wl,-rpath,/mnt/HA/opt/hdf5/intel/2015/1.10.1-serial/lib -L/mnt/HA/opt/hdf5/intel/2015/1.10.1-serial/lib -lhdf5_hl -lhdf5 "
         #setenv extra_lib ""
         setenv mpi_lib ""    #> No Library specification needed for mpiifort
                              #> -lmpich for mvapich 

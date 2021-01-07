@@ -66,8 +66,14 @@ UTIL/inline_phot_preproc/bldrun.log
 #user specific scripts
 /scripts/
 
+#nfs files ignored
+.nfs*
 
 #unique to user; below section unlikely to add and commit to repository
 bldit_project.csh
 
+# Do not commit the pdfs
+*.pdf 
+/Analysis/plots
+/data
 
