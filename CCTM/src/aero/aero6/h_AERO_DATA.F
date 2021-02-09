@@ -121,7 +121,7 @@ C----------------------------------------------------------------------
 #endif 
 
 
-	use HDMod 
+	  use HDMod 
       Implicit None
 
 C Number of aerosol species and modes
@@ -181,7 +181,7 @@ C-------------------------------------------------------------------------------
          Real            :: visual_idx_large     ! visual index factor [ m2 g-1 ] for large mode, if not applicable, same value as visual_idx
          Logical         :: om                   ! flag for organic aerosols
          Character( 16 ) :: optic_surr           ! optical surrogate name
-         Real            :: kappaorg             ! hygroscopicity parameter for organic aerosol (excluding POC+NCOM which must be calculated)
+         Real( 8 )       :: kappaorg             ! hygroscopicity parameter for organic aerosol (excluding POC+NCOM which must be calculated)
       End Type spcs_type
       Type( spcs_type ), Allocatable, Save :: aerospc ( : )
  
@@ -198,7 +198,7 @@ C-------------------------------------------------------------------------------
          Real            :: visual_idx_large     ! visual index factor [ m2 g-1 ] for large mode, if not applicable, same value as visual_idx
          Logical         :: om                   ! flag for organic aerosols
          Character( 16 ) :: optic_surr           ! optical surrogate name
-         Real            :: kappaorg             ! hygroscopicity parameter for organic aerosol (excluding POC+NCOM which must be calculated)
+         Real( 8 )       :: kappaorg             ! hygroscopicity parameter for organic aerosol (excluding POC+NCOM which must be calculated)
       End Type spcs_list_type
 
       Type( spcs_list_type ), Parameter :: aerolist( n_aerolist ) = (/
@@ -399,8 +399,8 @@ C - but only accumulation and coarse modes used
       Type emis_table
          Character( 16 ) :: description       ! Species Long Name
          Character( 16 ) :: name              ! Species Name
-         Real            :: mw                ! Molecular weight (g/mol)
-         Real            :: spcfac( 2 )       ! Speciation Factor for fine and coarse modes (g/g)
+         Real( 8 )       :: mw                ! Molecular weight (g/mol)
+         Real( 8 )       :: spcfac( 2 )       ! Speciation Factor for fine and coarse modes (g/g)
       End type emis_table
 
 C For the wind-blown dust speciation factors, we used the median of the Desert Soil
@@ -658,8 +658,8 @@ C Indices of Optional sulfur tracking species
       Integer :: oso4icbc_idx   = 0
 
 C Common Arrays for Aerosol Data
-      Real, Allocatable :: aerospc_mw( : )     ! molecular weights (from AE_SPC Namelist) [ g/mol ]
-      Real, Allocatable :: aerospc_mwinv( : )  ! reciprocal MWs (from AE_SPC Namelist) [ mol/g ]
+      Real( 8 ), Allocatable :: aerospc_mw( : )     ! molecular weights (from AE_SPC Namelist) [ g/mol ]
+      Real( 8 ), Allocatable :: aerospc_mwinv( : )  ! reciprocal MWs (from AE_SPC Namelist) [ mol/g ]
       TYPE(hyperdual), Allocatable :: aerospc_conc( :,: ) ! aero species concentration [ ug/m^3 ]
 
 C Common factors
@@ -783,7 +783,7 @@ C-----------------------------------------------------------------------
 C Local Variables:
       Character( 256 ) :: xmsg
       Character( 256 ) :: xmsg2
-      Real    :: mole_weight( n_aerolist )
+      Real( 8 )    :: mole_weight( n_aerolist )
       Integer :: map_listtogrid( n_aerolist,n_mode )
       Integer :: map_aerotolist( n_aerolist )
 
@@ -807,7 +807,7 @@ C Local Variables:
 
       Call LOG_SUBHEADING( LOGDEV, "Map Aerosol Species" )
 
-      mole_weight = 0.0
+      mole_weight = 0.0d0
 
       n_aerospc      = 0   ! Number of Used Aerosol Chemical Species
       map_listtogrid = 0   ! Pointer from aerolist to CGRID
@@ -913,7 +913,7 @@ C Build mapping to CGRID for each species in the master AeroList
 
          ! Map mode-independent properties
          aerospc_mw( spc ) = mole_weight( l )
-         aerospc_mwinv( spc ) = 1.0E0 / aerospc_mw( spc )
+         aerospc_mwinv( spc ) = 1.0D0 / aerospc_mw( spc )
 
          Do n = 1,n_mode
             ! Map the Modal-Dependent CGRID Pointers from AeroSpc to AeroList

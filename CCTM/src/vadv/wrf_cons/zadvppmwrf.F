@@ -131,8 +131,8 @@ C Advected species dimension
 
 C File Variables:
 
-      REAL        RHOJM1( NCOLS,NROWS,NLAYS ) ! RhoJ from Met file at start of tstep
-      REAL        RHOJM2( NCOLS,NROWS,NLAYS ) ! RhoJ from Met file at end of tstep
+      REAL( 8 )        RHOJM1( NCOLS,NROWS,NLAYS ) ! RhoJ from Met file at start of tstep
+      REAL( 8 )        RHOJM2( NCOLS,NROWS,NLAYS ) ! RhoJ from Met file at end of tstep
 
 C Local variables:
 

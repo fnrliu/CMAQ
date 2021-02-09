@@ -135,9 +135,9 @@ C *** Calculate aerosol 3rd moment concentrations [ m**3 / m**3 ]
       End Do
 
 C *** Calculate modal average particle densities [ kg/m**3 ]
-      aeromode_dens = 1.0D-9 * f6dpi * aeromode_mass / moment3_conc ! hyperdual
-      Where( aeromode_dens%x .Lt. densmin )
-         aeromode_dens%x = densmin
+      aeromode_dens = 1.0D-9 * f6dpi * aeromode_mass ! hyperdual
+      Where( aeromode_dens%x .Lt. densmin )   !! This is questionable
+         aeromode_dens%x = densmin            !! This is questionable
       End Where
 
 C *** Calculate geometric standard deviations as follows:
