@@ -145,13 +145,13 @@ C Default minimum concentration
       Real,    Parameter :: cm_cor( n_mode ) = (/conmin, conmin, conmin/)
 
       Real,    Parameter :: def_diam( n_mode )   = (/ 15.0E-9, 80.0E-9,  600.0E-9 /)  ! default background mean diameter for each mode
-      Real( 8 ),    Parameter :: min_diam_g( n_mode ) = (/ 1.0D-9,  30.0D-9,  120.0D-9 /)
+      Real,    Parameter :: min_diam_g( n_mode ) = (/ 1.0E-9,  30.0E-9,  120.0E-9 /)
       Real,    Parameter :: max_diam_g( n_mode ) = (/ 80.0E-9, 500.0E-9, 100.0E-6 /)
 
       Real,    Parameter :: def_sigma_g( n_mode ) = (/ 1.70, 2.0, 2.2 /)       ! default background sigma-g for each mode
-      Real( 8 ),    Parameter :: min_sigma_g = 1.05
+      Real,    Parameter :: min_sigma_g = 1.05
       Real,    Parameter :: max_sigma_g = 2.5001
-      Real( 8 ),    Save      :: def_l2sg( n_mode ), max_l2sg, min_l2sg   
+      Real,    Save      :: def_l2sg( n_mode ), max_l2sg, min_l2sg   
 
 C If FIXED_sg = T, atkn & accum std. dev. are not changed by GETPAR
 C If FIXED_sg = F, the second moment will be adjusted if the standard
@@ -172,8 +172,8 @@ C-------------------------------------------------------------------------------
       Type spcs_type
          Character( 16 ) :: name( n_mode )       ! mode-dependent names of aerosol species
          Character( 16 ) :: bulkname             ! mode-independent names of aerosol species
-         Real( 8 )       :: min_conc( n_mode )   ! minimum concentration values for each mode
-         Real( 8 )       :: density              ! density [ kg m-3 ]
+         Real            :: min_conc( n_mode )   ! minimum concentration values for each mode
+         Real            :: density              ! density [ kg m-3 ]
          Logical         :: no_M2Wet             ! flag to exclude from 2nd moment during transport
          Logical         :: tracer               ! tracer flag; does have not mass
          Integer         :: charge               ! electroneutrality charge
@@ -181,7 +181,7 @@ C-------------------------------------------------------------------------------
          Real            :: visual_idx_large     ! visual index factor [ m2 g-1 ] for large mode, if not applicable, same value as visual_idx
          Logical         :: om                   ! flag for organic aerosols
          Character( 16 ) :: optic_surr           ! optical surrogate name
-         Real( 8 )       :: kappaorg             ! hygroscopicity parameter for organic aerosol (excluding POC+NCOM which must be calculated)
+         Real            :: kappaorg             ! hygroscopicity parameter for organic aerosol (excluding POC+NCOM which must be calculated)
       End Type spcs_type
       Type( spcs_type ), Allocatable, Save :: aerospc ( : )
  
@@ -189,8 +189,8 @@ C-------------------------------------------------------------------------------
       ! Master List of Aerosol Species and Properties
       Type spcs_list_type
          Character( 16 ) :: bulkname             ! mode-independent names of aerosol species
-         Real( 8 )       :: min_conc( n_mode )   ! minimum concentration values for each mode
-         Real( 8 )       :: density              ! density [ kg m-3 ]
+         Real            :: min_conc( n_mode )   ! minimum concentration values for each mode
+         Real            :: density              ! density [ kg m-3 ]
          Logical         :: no_M2Wet             ! flag to exclude from 2nd moment during transport
          Logical         :: tracer               ! tracer flag; does have not mass
          Integer         :: charge               ! electroneutrality charge
@@ -198,7 +198,7 @@ C-------------------------------------------------------------------------------
          Real            :: visual_idx_large     ! visual index factor [ m2 g-1 ] for large mode, if not applicable, same value as visual_idx
          Logical         :: om                   ! flag for organic aerosols
          Character( 16 ) :: optic_surr           ! optical surrogate name
-         Real( 8 )       :: kappaorg             ! hygroscopicity parameter for organic aerosol (excluding POC+NCOM which must be calculated)
+         Real            :: kappaorg             ! hygroscopicity parameter for organic aerosol (excluding POC+NCOM which must be calculated)
       End Type spcs_list_type
 
       Type( spcs_list_type ), Parameter :: aerolist( n_aerolist ) = (/
@@ -399,8 +399,8 @@ C - but only accumulation and coarse modes used
       Type emis_table
          Character( 16 ) :: description       ! Species Long Name
          Character( 16 ) :: name              ! Species Name
-         Real( 8 )       :: mw                ! Molecular weight (g/mol)
-         Real( 8 )       :: spcfac( 2 )       ! Speciation Factor for fine and coarse modes (g/g)
+         Real            :: mw                ! Molecular weight (g/mol)
+         Real            :: spcfac( 2 )       ! Speciation Factor for fine and coarse modes (g/g)
       End type emis_table
 
 C For the wind-blown dust speciation factors, we used the median of the Desert Soil
@@ -658,12 +658,12 @@ C Indices of Optional sulfur tracking species
       Integer :: oso4icbc_idx   = 0
 
 C Common Arrays for Aerosol Data
-      Real( 8 ), Allocatable :: aerospc_mw( : )     ! molecular weights (from AE_SPC Namelist) [ g/mol ]
-      Real( 8 ), Allocatable :: aerospc_mwinv( : )  ! reciprocal MWs (from AE_SPC Namelist) [ mol/g ]
+      Real, Allocatable :: aerospc_mw( : )     ! molecular weights (from AE_SPC Namelist) [ g/mol ]
+      Real, Allocatable :: aerospc_mwinv( : )  ! reciprocal MWs (from AE_SPC Namelist) [ mol/g ]
       TYPE(hyperdual), Allocatable :: aerospc_conc( :,: ) ! aero species concentration [ ug/m^3 ]
 
 C Common factors
-      Real :: h2ofac                      ! converts mass concentrations [ug/m3] to 3rd moment concentrations [m3/m3]
+      Real( 8 ) :: h2ofac                      ! converts mass concentrations [ug/m3] to 3rd moment concentrations [m3/m3]
 
 C Variables for converting emission rates into molar-mixing-ratio units
       REAL,    PARAMETER :: GPKG = 1.0E+03     ! kg -> g
@@ -673,18 +673,18 @@ C-------------------------------------------------------------------------------
       Type mode_type
          Character( 16 ) :: num_name     ! name of aerosol number variable
          Character( 16 ) :: srf_name     ! name of aerosol surface area variable
-         Real( 8 )       :: min_numconc  ! minimum number concentration
-         Real( 8 )       :: min_m2conc   ! minimum 2nd moment concentration
-         Real( 8 )       :: min_m3conc   ! minimum 3rd moment concentration
+         Real            :: min_numconc  ! minimum number concentration
+         Real            :: min_m2conc   ! minimum 2nd moment concentration
+         Real            :: min_m3conc   ! minimum 3rd moment concentration
       End Type mode_type
 
       Type ( mode_type ), Parameter  :: aeromode( n_mode ) = (/
 C                   number     surface   minimum minimum minimum
 C                    name       name     numconc  m2conc  m3conc
 C                  ----------  -------  -------- -------  ------
-     &   mode_type('NUMATKN', 'SRFATKN', conminD,  conminD, conminD),
-     &   mode_type('NUMACC ', 'SRFACC ', conminD,  conminD, conminD),
-     &   mode_type('NUMCOR ', 'SRFCOR ', conminD,  conminD, conminD)/)
+     &   mode_type('NUMATKN', 'SRFATKN', conmin,  conmin, conmin),
+     &   mode_type('NUMACC ', 'SRFACC ', conmin,  conmin, conmin),
+     &   mode_type('NUMCOR ', 'SRFCOR ', conmin,  conmin, conmin)/)
 
 
 C      Getpar stuff below, keep hyperdual for now    QQQ 
@@ -707,10 +707,10 @@ C Log of geometric standard deviation (calculated by GETPAR )
       TYPE(hyperdual) :: aeromode_lnsg( n_mode )
 
 C Minimum number (calculated in map_aero routine)
-      Real( 8 ) :: aeromode_minNum( n_mode )
+      Real :: aeromode_minNum( n_mode )
 
 C Minimum 2nd moment (calculated in map_aero routine)
-      Real( 8 ) :: aeromode_minM2( n_mode )
+      Real :: aeromode_minM2( n_mode )
 
 C Mapping for loading from and unloading to CGRID array
       Integer, Allocatable :: aerospc_map( :,: )     ! indices of aero species to CGRID
@@ -732,7 +732,7 @@ C IC/BC Correction Mapping
       !   LBCMODE - Mask for each aerosol mode
       LOGICAL, ALLOCATABLE, SAVE :: LBCNUM(:), LBCSRF(:), LBCMASS(:),
      &                        LBCMODE(:,:), LBCDRY(:)
-      Real( 8 ), ALLOCATABLE, SAVE :: AEROCGRID_RHOINV( : ) !
+      REAL, ALLOCATABLE, SAVE :: AEROCGRID_RHOINV( : ) !
       
 C Private variables for loading from and unloading to CGRID array
       Logical, Private, Save :: mapped    = .False.
@@ -777,21 +777,21 @@ C-----------------------------------------------------------------------
       Use aeromet_data
       Use utilio_defn
       Use vdiff_data, only : n_spc_diff, diff_spc
-	use HDMod 
+	  use HDMod 
       Implicit None
 
 C Local Variables:
       Character( 256 ) :: xmsg
       Character( 256 ) :: xmsg2
-      Real( 8 )    :: mole_weight( n_aerolist )
+      Real    :: mole_weight( n_aerolist )
       Integer :: map_listtogrid( n_aerolist,n_mode )
       Integer :: map_aerotolist( n_aerolist )
 
       Integer, Allocatable :: aerospc_in_dustlist( : )
 
       Integer l, m, n, spc, isea, idust
-      Real( 8 ) :: so4fac
-      Real( 8 ) :: anthfac
+      Real    so4fac
+      Real    anthfac
 
       Real    POA_OC    ! ratio of Elemental Oxygen to Carbon in POA
       Real    OOA_OC    ! ratio of Elemental Oxygen to Carbon in Oxygenated OA
@@ -807,21 +807,21 @@ C Local Variables:
 
       Call LOG_SUBHEADING( LOGDEV, "Map Aerosol Species" )
 
-      mole_weight = 0.0d0
+      mole_weight = 0.0
 
       n_aerospc      = 0   ! Number of Used Aerosol Chemical Species
       map_listtogrid = 0   ! Pointer from aerolist to CGRID
       map_aerotolist = 0   ! Pointer from aerospc to aerolist
       AE_eflag       = .False.
-      max_l2sg       = ( LOG( max_sigma_g ) ) ** 2.0D0
-      min_l2sg       = ( LOG( min_sigma_g ) ) ** 2.0D0
-      def_l2sg( : )  = ( LOG( def_sigma_g( : ) ) ) ** 2.0D0
+      max_l2sg       = ( LOG( max_sigma_g ) ) ** 2
+      min_l2sg       = ( LOG( min_sigma_g ) ) ** 2
+      def_l2sg( : )  = ( LOG( def_sigma_g( : ) ) ) ** 2
       
 
       allocate( aerocgrid_rhoinv( n_ae_trns ), lbcnum( n_ae_trns ),
      &          lbcsrf( n_ae_trns ), lbcmass( n_ae_trns ),
      &          lbcmode( n_mode,n_ae_trns ), lbcdry( n_ae_trns ) )
-      aerocgrid_rhoinv = 0.0D0
+      aerocgrid_rhoinv = 0.
       lbcnum = .False.
       lbcsrf = .False.
       lbcmass= .False.
@@ -872,7 +872,7 @@ C Build mapping to CGRID for each species in the master AeroList
                If ( .Not. aerolist( spc)%tracer )  lbcmass( n ) = .True.
                If ( .Not. aerolist( spc)%no_m2wet ) lbcdry( n ) = .True.
                !Map the CGRID Aerosol Species to their Densities
-               aerocgrid_rhoinv( n ) = 1.0D0 / aerolist( spc )%density
+               aerocgrid_rhoinv( n ) = 1.0 / aerolist( spc )%density
 
             End If
          End Do
@@ -913,7 +913,7 @@ C Build mapping to CGRID for each species in the master AeroList
 
          ! Map mode-independent properties
          aerospc_mw( spc ) = mole_weight( l )
-         aerospc_mwinv( spc ) = 1.0D0 / aerospc_mw( spc )
+         aerospc_mwinv( spc ) = 1.0E0 / aerospc_mw( spc )
 
          Do n = 1,n_mode
             ! Map the Modal-Dependent CGRID Pointers from AeroSpc to AeroList
@@ -952,7 +952,7 @@ C Build mapping to CGRID for aero # and surf area variables
 !            Call m3exit( pname, 0, 0, xmsg, xstat3 )
          Else
             aeronum_map( m ) = ae_strt - 1 + n
-            aerocgrid_rhoinv( n ) = 1.0D0
+            aerocgrid_rhoinv( n ) = 1.0
             lbcnum( n ) = .True.
             lbcmode( m,n ) = .True.
          End If
@@ -966,7 +966,7 @@ C Build mapping to CGRID for aero # and surf area variables
 !            Call m3exit( pname, 0, 0, xmsg, xstat3 )
          Else
             aerosrf_map( m ) = ae_strt - 1 + n
-            aerocgrid_rhoinv( n ) = 1.0D0
+            aerocgrid_rhoinv( n ) = 1.0
             lbcsrf( n ) = .True.
             lbcmode( m,n ) = .True.
          End If
@@ -1061,23 +1061,23 @@ C Compute common factors
       h2ofac = 1.0D-9 * f6dpi / Real( aerospc( ah2o_idx )%density, 8 )
 
 C compute aeromode_minNum and aeromode_minM2
-      so4fac  = 1.0D-9 * f6dpi / Real(aerospc( aso4_idx )%density, 8)
-      anthfac = 1.0D-9 * f6dpi / Real(aerospc( acors_idx )%density, 8)
+      so4fac  = 1.0E-9 * Real( f6dpi, 4 ) / aerospc( aso4_idx )%density
+      anthfac = 1.0E-9 * Real( f6dpi, 4 ) / aerospc( acors_idx )%density
 
       Do m = 1, n_mode
          If ( m .Lt. n_mode ) Then
             aeromode_minNum( m ) = aerospc( aso4_idx )%min_conc( m ) /
-     &           Real(( def_diam( m )**3 * Exp( 4.5 * Log( def_sigma_g( m ) )**2 ) ), 8 )
+     &           ( def_diam( m )**3 * Exp( 4.5 * Log( def_sigma_g( m ) )**2 ) )
             aeromode_minNum( m ) = aeromode_minNum( m ) * so4fac 
-            aeromode_minNum( m ) = Max( aeromode_minNum( m ), conminD )
+            aeromode_minNum( m ) = Max( aeromode_minNum( m ), conmin )
          Else
             aeromode_minNum( m ) = aerospc( acors_idx )%min_conc( m ) /
-     &           Real(( def_diam( m )**3 * Exp( 4.5 * Log( def_sigma_g( m ) )**2 ) ), 8 )
+     &           ( def_diam( m )**3 * Exp( 4.5 * Log( def_sigma_g( m ) )**2 ) )
             aeromode_minNum( m ) = aeromode_minNum( m ) * anthfac 
-            aeromode_minNum( m ) = Max( aeromode_minNum( m ), conminD )
+            aeromode_minNum( m ) = Max( aeromode_minNum( m ), conmin )
          End If
          aeromode_minM2( m ) = aeromode_minNum( m ) *
-     &             Real(def_diam( m )**2 * Exp( 2.0 * Log( def_sigma_g( m ) )**2 ), 8) 
+     &             def_diam( m )**2 * Exp( 2.0 * Log( def_sigma_g( m ) )**2 )
       End do
 
       if( AE_eflag )Then
@@ -1114,7 +1114,7 @@ C     Prakash Bhave, Jeff Young, and Sergey Napelenok.
 C     4/2016: Updated for 2nd moment by H. Pye and B. Murphy
 C-----------------------------------------------------------------------
 
-      Use aeromet_data, only : pi, f6pi, f6dpi  ! fundamental constants, data type definitions, etc.
+      Use aeromet_data, only : pi, f6pi  ! fundamental constants, data type definitions, etc.
 
 	use HDMod 
       Implicit None
@@ -1123,7 +1123,7 @@ C Arguments:
       TYPE(hyperdual),    Intent( In ) :: conc( : )
       Logical, Intent( In ) :: minchk
 #ifdef sens
-      TYPE(hyperdual),    Intent( In ) :: s_conc( :,: )
+      Real,    Intent( In ) :: s_conc( :,: )
       Logical, Intent( In ) :: schk  ! necessary because some routines don't require sensitivity updates
 #endif
 
@@ -1161,7 +1161,7 @@ C Copy grid cell concentrations of aero species to aerospc_conc
                         If ( aerospc_conc( spc,m ) .Eq. aerospc( spc )%min_conc( m ) ) Then
                            s_aerospc_conc( spc,m,np ) = 0.0D0
                         Else
-                           s_aerospc_conc( spc,m,np ) = hdual_cast( s_conc( np,n ))
+                           s_aerospc_conc( spc,m,np ) = Real( s_conc( np,n ), 8 )
                         End If
                      End Do
                   End If
@@ -1178,7 +1178,7 @@ C Copy grid cell concentrations of aero species to aerospc_conc
 #ifdef sens
                   If ( schk ) Then
                      Do np = 1, npmax
-                        s_aerospc_conc( spc,m,np ) = hdual_cast( s_conc( np,n ))
+                        s_aerospc_conc( spc,m,np ) = Real( s_conc( np,n ), 8 )
                      End Do
                   End If
 #endif
@@ -1192,7 +1192,7 @@ C Copy grid cell concentrations of aero species to aerospc_conc
          moment3_conc( m ) = sum( aerospc_conc(:,m) / aerospc(:)%density,  
      &      MASK= ( ( .NOT. aerospc%no_M2wet ) .AND.
      &              ( .NOT. aerospc%Tracer ) ) )
-         moment3_conc( m ) = max( moment3_conc( m ) * 1.0D-9 * f6dpi,
+         moment3_conc( m ) = max( moment3_conc( m ) * 1.0E-9 * f6pi,
      &                            aeromode( m )%min_m3conc )
       End Do
 
@@ -1207,14 +1207,14 @@ C Convert surface area to M2 and set wet_moments_flag
             n = aeronum_map( m )
             moment0_conc( m ) = Max( conc( n ), aeromode( m )%min_numconc )
             n = aerosrf_map( m )
-            moment2_conc( m ) = Max( conc( n ) / Real(pi, 8), aeromode( m )%min_m2conc )
+            moment2_conc( m ) = Max( conc( n ) / pi, aeromode( m )%min_m2conc )
          End Do
       Else
          Do m = 1, n_mode
             n = aeronum_map( m )
             moment0_conc( m ) = conc( n )
             n = aerosrf_map( m )
-            moment2_conc( m ) = conc( n ) / Real(pi, 8) 
+            moment2_conc( m ) = conc( n ) / pi 
          End Do
       End If
       wet_moments_flag = .false.
@@ -1247,14 +1247,14 @@ C-----------------------------------------------------------------------
       Use aeromet_data, only : pi     ! fundamental constants, data type definitions, etc.
       Use utilio_defn
 
-	use HDMod 
+	  use HDMod 
       Implicit None
 
 C Arguments:
       TYPE(hyperdual), Intent( Out ) :: conc( : )
       Logical, Intent( In ) :: minchk
 #ifdef sens 
-      TYPE(hyperdual),    Intent( Out ) :: s_conc( :,: )
+      Real,    Intent( Out ) :: s_conc( :,: )
 #endif
 
 C Local variables:
@@ -1279,7 +1279,7 @@ C Copy aerospc_conc back to grid cell concentrations
                        If ( conc( n ) .Eq. aerospc( spc )%min_conc( m ) ) Then
                           s_conc( np,n ) = 0.0
                        Else
-                          s_conc( np,n ) = hdual_cast( s_aerospc_conc( spc,m,np )) 
+                          s_conc( np,n ) = Real( s_aerospc_conc( spc,m,np ), 4 ) 
                        End If
                     End Do
 #endif
@@ -1294,7 +1294,7 @@ C Copy aerospc_conc back to grid cell concentrations
                     conc( n ) = aerospc_conc( spc,m )
 #ifdef sens
                     Do np = 1, npmax
-                       s_conc( np,n ) = hdual_cast( s_aerospc_conc( spc,m,np )) 
+                       s_conc( np,n ) = Real( s_aerospc_conc( spc,m,np ), 4 ) 
                     End Do
 #endif
                End If
@@ -1323,7 +1323,7 @@ C Save dry second moment to surface area (with pi conversion)
 
       Do m = 1, n_mode
          n = aerosrf_map( m )
-         conc( n ) = Real( pi, 8 ) * moment2_conc( m )
+         conc( n ) = Real( pi, 4 ) * moment2_conc( m )
       End Do
 
       Return
@@ -1423,7 +1423,7 @@ C Local variables:
       TYPE(hyperdual) :: m2( n_mode )       ! wet or dry M2
       TYPE(hyperdual) :: drysumM3  ! dry M3 [ m**3 / m**3 ]
       TYPE(hyperdual) :: wetsumM3  ! wet M3 [ m**3 / m**3 ]
-      TYPE(hyperdual) :: factor
+      Real( 8 )       :: factor
       TYPE(hyperdual) :: initialM3 ! initial M3 from moment3_conc [ m**3 /m**3 ]
       TYPE(hyperdual) :: initialM2 ! initial M2 from moment2_conc [ m**2 /m**3 ]
 
@@ -1437,14 +1437,14 @@ C     moment [ m**2/m**3 ]
 
          Do n = 1, n_mode
             initialM2 = moment2_conc( n )
-            If ( initialM2 .Eq. 0.0D0 ) Then
+            If ( initialM2 .Eq. 0.0 ) Then
                 write( xmsg,'(A32,I1,A42)') "Warning: Second Moment for Mode ",
      &                 n," is 0.0. This will cause numerical issues."
                 Call m3warn( pname_loc, 0, 0, xmsg )
             End If
 
             initialM3 = max( moment3_conc( n ), aeromode( n )%min_m3conc )
-            If ( initialM3 .Eq. 0.0D0 ) Then
+            If ( initialM3 .Eq. 0.0 ) Then
                 write( xmsg,'(A31,I1,A42)') "Warning: Third Moment for Mode ",
      &                 n," is 0.0. This will cause numerical issues."
                 call m3warn( pname_loc, 0, 0, xmsg )
@@ -1453,8 +1453,8 @@ C     moment [ m**2/m**3 ]
             wetsumM3 = 0.0d0
             Do spc = 1, n_aerospc
                If ( aerospc( spc )%tracer .Or. aero_missing(spc,n) ) Cycle
-               factor = 1.0D-9 * f6dpi / aerospc( spc )%density 
-               wetsumM3  = wetsumM3 + factor * aerospc_conc( spc,n ) 
+               factor = Real( 1.0E-9 * f6pi / aerospc( spc )%density, 8 ) 
+               wetsumM3  = wetsumM3 + factor * aerospc_conc( spc,n )
             End Do
             m3( n ) = Max ( wetsumM3 , aeromode( n )%min_m3conc )
             If ( wet_moments_flag ) Then
@@ -1473,14 +1473,14 @@ C     moment [ m**2/m**3 ]
 
          Do n = 1, n_mode
             initialM2 = moment2_conc( n )
-            If ( initialM2 .Eq. 0.0D0 )  Then
+            If ( initialM2 .Eq. 0.0 )  Then
                 write( xmsg,'(A32,I1,A42)') "Warning: Second Moment for Mode ",
      &                 n," is 0.0. This will cause numerical issues."
                 Call m3warn( pname_loc, 0, 0, xmsg )
             End If
 
             initialM3 = max( moment3_conc( n ), aeromode( n )%min_m3conc )
-            If ( initialM3 .Eq. 0.0D0 )  Then
+            If ( initialM3 .Eq. 0.0 )  Then
                 write( xmsg,'(A31,I1,A42)') "Warning: Third Moment for Mode ",
      &                 n," is 0.0. This will cause numerical issues."
                 Call m3warn( pname_loc, 0, 0, xmsg )
@@ -1490,7 +1490,7 @@ C     moment [ m**2/m**3 ]
             Do spc = 1, n_aerospc
                If ( aerospc( spc )%tracer .Or. aero_missing(spc,n) .Or.
      &              aerospc( spc )%no_M2Wet  ) Cycle
-               factor = 1.0D-9 * f6dpi /  aerospc( spc )%density  
+               factor = Real( 1.0E-9 * f6pi /  aerospc( spc )%density, 8 )  
                drysumM3  = drysumM3 + factor * aerospc_conc( spc,n ) 
             End Do
             m3( n ) = Max ( drysumM3 , aeromode( n )%min_m3conc )
@@ -1511,7 +1511,6 @@ C     moment [ m**2/m**3 ]
       Return
       End Subroutine calcmoments
 
-C
 C-----------------------------------------------------------------------
       Subroutine CHECK_AERO_ICBC( IBCON, AE_MASS_UNIT, STAT, AER_PAR, LMODE )
 
@@ -1529,39 +1528,38 @@ C
 C 11 May 16  B.Murphy  Program Written
 C
 C-----------------------------------------------------------------------
-      Use AEROMET_DATA, only : pi, f6pi, f6dpi
+      Use AEROMET_DATA, only : pi, f6pi
 
-	use HDMod 
       Implicit None
 
-      Real( 8 ), INTENT(INOUT)     :: IBCON( : )
-      LOGICAL, INTENT( IN )   :: AE_MASS_UNIT  ! FALSE for KGM3 input
+      REAL, INTENT(INOUT)        :: IBCON( : )
+      LOGICAL, INTENT( IN ) :: AE_MASS_UNIT  ! FALSE for KGM3 input
                                              ! TRUE  for UGM3 input
-      INTEGER, INTENT(OUT)    :: STAT     ! 0 - Distribution is ok
+      INTEGER, INTENT(OUT)       :: STAT     ! 0 - Distribution is ok
                                              ! 1 - Distribution is problematic
-      REAL( 8 ), INTENT(OUT)       :: AER_PAR( 2, N_MODE, 5 ) !Track the model parameters   (N, M2, M3, dg, sg) -Before
+      REAL, INTENT(OUT) :: AER_PAR( 2, N_MODE, 5 ) !Track the modal parameters   (N, M2, M3, dg, sg) -Before
                                                    !before and after the BC      (N, M2, M3, dg, sg) -After
                                                    !check routine               
-      INTEGER, INTENT(OUT)    :: LMODE  !Identifies the problematic mode
+      INTEGER, INTENT(OUT) :: LMODE  !Identifies the problematic mode
 
       INTEGER          :: LSTAT
 
-      REAL( 8 ), PARAMETER  :: F1PI = REAL(1.0 / pi, 8) 
-      REAL( 8 ), PARAMETER  :: ONE_THIRD  = REAL(1.0 / 3.0, 8) 
-      REAL( 8 ), PARAMETER  :: TWO_THIRDS = REAL(2.0 / 3.0, 8)
+      REAL, PARAMETER  :: F1PI = 1.0 / pi
+      REAL, PARAMETER  :: ONE_THIRD  = 1.0 / 3.0
+      REAL, PARAMETER  :: TWO_THIRDS = 2.0 / 3.0
 
 
 C Local variables:
 
-      INTEGER              :: IMODE
-      REAL( 8 )     :: NUM, M2, M3, l2sg, dg, sg
-      REAL( 8 ), Parameter :: KGPMG = 1.0D-9 !Kilogram per microgram m-3
+      INTEGER   :: IMODE
+      REAL      :: NUM, M2, M3, l2sg, dg, sg
+      REAL, Parameter :: KGPMG = 1.0E-9 !Kilogram per microgram m-3
 
       LMODE   = 0
       STAT    = 0
-      AER_PAR = 0.0D0
-      dg      = 0.0D0
-      sg      = 0.0D0
+      AER_PAR = 0.0
+      dg      = 0.0
+      sg      = 0.0
        
       CALL MAP_AERO()
 
@@ -1574,7 +1572,7 @@ C Local variables:
          NUM = SUM( IBCON( : ), MASK = ( LBCMODE( IMODE,: ) .AND. LBCNUM ) )
          M2  = SUM( IBCON( : ), MASK = ( LBCMODE( IMODE,: ) .AND. LBCSRF ) ) * F1PI
 
-         M3 = SUM( IBCON( : ) * AEROCGRID_RHOINV * F6DPI, 
+         M3 = SUM( IBCON( : ) * AEROCGRID_RHOINV * F6PI, 
      &             MASK = ( LBCMASS .AND. LBCMODE( IMODE,: ) .AND. LBCDRY( : ) )  )
 
          IF ( AE_MASS_UNIT ) M3 = M3 * KGPMG
@@ -1582,13 +1580,13 @@ C Local variables:
          AER_PAR ( 1, IMODE, 1 ) = NUM
          AER_PAR ( 1, IMODE, 2 ) = M2
          AER_PAR ( 1, IMODE, 3 ) = M3
-         AER_PAR ( 1, IMODE, 4 ) = 0.0D0    
-         AER_PAR ( 1, IMODE, 5 ) = 0.0D0    
+         AER_PAR ( 1, IMODE, 4 ) = 0.    
+         AER_PAR ( 1, IMODE, 5 ) = 0.    
 
-         IF ( M3 .LT. 1.0d-30 ) THEN
+         IF ( M3 .LT. 1.0e-30 ) THEN
              LSTAT = 4
              LMODE = IMODE
-         ELSE IF ( NUM .LT. 1.0d-30 .OR. M2 .LT. 1.0d-30 ) THEN
+         ELSE IF ( NUM .LT. 1.0e-30 .OR. M2 .LT. 1.0e-30 ) THEN
              LSTAT = 3
              LMODE = IMODE
          ELSE                  
@@ -1599,12 +1597,12 @@ C Local variables:
                   LMODE = IMODE
              ELSE
 
-                  dg   = ( M3 / NUM * EXP( -4.5d0 * l2sg ) )  ** ( ONE_THIRD )
+                  dg   = ( M3 / NUM * EXP( -4.5 * l2sg ) )  ** ( ONE_THIRD )
                   sg   = EXP( SQRT( l2sg ) )
                   AER_PAR( 1, IMODE, 4 ) = dg
                   AER_PAR( 1, IMODE, 5 ) = sg
 
-                  IF ( dg .LT. Real(MIN_DIAM_G( IMODE ), 8)  .OR. dg .GT. Real(MAX_DIAM_G( IMODE ), 8) ) THEN
+                  IF ( dg .LT. MIN_DIAM_G( IMODE )  .OR. dg .GT. MAX_DIAM_G( IMODE ) ) THEN
                       LSTAT = 1
                       LMODE = IMODE
                   ENDIF
@@ -1624,8 +1622,8 @@ C Local variables:
            !Rewrite Boundary Condition Number and Surface Area to Satisfy
            !Default Size Parameters
            l2sg = DEF_L2SG( IMODE )
-           NUM = M3 * ( EXP( -4.5d0 * l2sg ) ) / ( DEF_DIAM( IMODE ) ) ** 3.0D0
-           dg   = ( M3 / NUM * EXP( -4.5d0 * l2sg ) ) ** ( ONE_THIRD )
+           NUM = M3 * ( EXP( -4.5 * l2sg ) ) / ( DEF_DIAM( IMODE ) ) ** 3
+           dg   = ( M3 / NUM * EXP( -4.5 * l2sg ) ) ** ( ONE_THIRD )
            sg   = EXP( SQRT( l2sg ) )
            
            !First Number Concentration
@@ -1649,13 +1647,13 @@ C Local variables:
      &                             aeromode_minnum( IMODE )  !Number
            WHERE( LBCMODE( IMODE,: ) .AND. LBCSRF ) IBCON = 
      &                             aeromode_minM2 ( IMODE )  !Second Moment
-           WHERE( LBCMODE( IMODE,: ) .AND. LBCMASS) IBCON = conminD  !Third Moment
+           WHERE( LBCMODE( IMODE,: ) .AND. LBCMASS) IBCON = conmin  !Third Moment
            !Save Modal Properties After the Check
            AER_PAR( 2, IMODE, 1 ) = aeromode_minnum( IMODE )  !Number
            AER_PAR( 2, IMODE, 2 ) = aeromode_minM2 ( IMODE )  !Second Moment
-           AER_PAR( 2, IMODE, 3 ) = conminD
-           AER_PAR( 2, IMODE, 4 ) = 0.0D0
-           AER_PAR( 2, IMODE, 5 ) = 0.0D0
+           AER_PAR( 2, IMODE, 3 ) = conmin
+           AER_PAR( 2, IMODE, 4 ) = 0.
+           AER_PAR( 2, IMODE, 5 ) = 0.
          ENDIF
 
       ENDDO

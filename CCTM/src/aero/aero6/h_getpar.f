@@ -176,7 +176,7 @@ c         below the minimum limit.
          aeromode_lnsg( n ) =  Sqrt( l2sg ) 
 
          ES36 =  Exp( 4.5d0 * l2sg )
-         aeromode_diam( n ) = Max( hdual_cast(min_diam_g( n )), ( moment3_conc( n )
+         aeromode_diam( n ) = Max( min_diam_g( n ), ( moment3_conc( n )
      &                      / ( moment0_conc( n ) * es36 ) ) ** one3d )
 
       End Do
