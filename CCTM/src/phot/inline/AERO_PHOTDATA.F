@@ -17,30 +17,33 @@
 !  subject to their copyright restrictions.                              !
 !------------------------------------------------------------------------!
       MODULE AERO_PHOTDATA
+      
+      use HDMod
+      use HDMod_cplx
 
       IMPLICIT NONE
 
-      REAL( 8 ), ALLOCATABLE :: SHELL_MOMENT3( :,: )  ! modal shell third moment conc.
-      REAL( 8 ), ALLOCATABLE :: CORE_MOMENT3 ( :,: )  ! model core third moment conc.
+      TYPE(hyperdual), ALLOCATABLE :: SHELL_MOMENT3( :,: )  ! modal shell third moment conc.
+      TYPE(hyperdual), ALLOCATABLE :: CORE_MOMENT3 ( :,: )  ! model core third moment conc.
 
-      REAL, ALLOCATABLE :: BLK_AE_VOL  ( :,: )     ! aerosol modal volumes [ m**3/m**3 ]
-      REAL, ALLOCATABLE :: BLK_AE_LSG  ( :,: )     ! aerosol modal log of geo. stand. dev
-      REAL, ALLOCATABLE :: BLK_AE_DGN  ( :,: )     ! aerosol modal mean geometeric diam. [ m ]
-      REAL, ALLOCATABLE :: AE_DGN_CORE ( :,: )   ! inner core modal mean geometeric diam. [ m ]
-      REAL, ALLOCATABLE :: AE_DGN_SHELL( :,: )   ! modal mean geometeric diam. [ m ]
-      REAL, ALLOCATABLE :: BLK_AE_CONC ( :,:,: ) ! aerosol species concentrations [ ug/m**3]
+      TYPE(hyperdual), ALLOCATABLE :: BLK_AE_VOL  ( :,: )     ! aerosol modal volumes [ m**3/m**3 ]
+      TYPE(hyperdual), ALLOCATABLE :: BLK_AE_LSG  ( :,: )     ! aerosol modal log of geo. stand. dev
+      TYPE(hyperdual), ALLOCATABLE :: BLK_AE_DGN  ( :,: )     ! aerosol modal mean geometeric diam. [ m ]
+      TYPE(hyperdual), ALLOCATABLE :: AE_DGN_CORE ( :,: )   ! inner core modal mean geometeric diam. [ m ]
+      TYPE(hyperdual), ALLOCATABLE :: AE_DGN_SHELL( :,: )   ! modal mean geometeric diam. [ m ]
+      TYPE(hyperdual), ALLOCATABLE :: BLK_AE_CONC ( :,:,: ) ! aerosol species concentrations [ ug/m**3]
 
-      REAL, ALLOCATABLE :: AE_NR_SHELL ( :,:,: ) ! real part of refractive index for outer shell
-      REAL, ALLOCATABLE :: AE_NI_SHELL ( :,:,: ) ! imaginary part of refractive index for outer shell
-      REAL, ALLOCATABLE :: AE_NR_CORE  ( :,:,: ) ! real part of refractive index for inner core
-      REAL, ALLOCATABLE :: AE_NI_CORE  ( :,:,: ) ! imaginary part of refractive index for inner core
+      TYPE(hyperdual), ALLOCATABLE :: AE_NR_SHELL ( :,:,: ) ! real part of refractive index for outer shell
+      TYPE(hyperdual), ALLOCATABLE :: AE_NI_SHELL ( :,:,: ) ! imaginary part of refractive index for outer shell
+      TYPE(hyperdual), ALLOCATABLE :: AE_NR_CORE  ( :,:,: ) ! real part of refractive index for inner core
+      TYPE(hyperdual), ALLOCATABLE :: AE_NI_CORE  ( :,:,: ) ! imaginary part of refractive index for inner core
       REAL, ALLOCATABLE :: BLK_AE_NR   ( :,:,: ) ! mean aerosol real part of refractive index
       REAL, ALLOCATABLE :: BLK_AE_NI   ( :,:,: ) ! mean aerosol imaginary part of refractive index
 
-      REAL, ALLOCATABLE :: AERO_ASYM_FAC ( :,: ) ! aerosol modal averaged asymmetry factor
-      REAL, ALLOCATABLE :: AERO_EXTI_COEF( :,: ) ! aerosol modal averaged extinction coeff., 1/m
-      REAL, ALLOCATABLE :: AERO_SCAT_COEF( :,: ) ! aerosol modal averaged scattering coeff., 1/m
-      REAL, ALLOCATABLE :: AERO_EXTI_550  ( : )  ! aerosol modal averaged extinction coeff. at 550nm, 1/m
+      TYPE(hyperdual), ALLOCATABLE :: AERO_ASYM_FAC ( :,: ) ! aerosol modal averaged asymmetry factor
+      TYPE(hyperdual), ALLOCATABLE :: AERO_EXTI_COEF( :,: ) ! aerosol modal averaged extinction coeff., 1/m
+      TYPE(hyperdual), ALLOCATABLE :: AERO_SCAT_COEF( :,: ) ! aerosol modal averaged scattering coeff., 1/m
+      TYPE(hyperdual), ALLOCATABLE :: AERO_EXTI_550  ( : )  ! aerosol modal averaged extinction coeff. at 550nm, 1/m
  
       PUBLIC            :: AERO_ASYM_FAC, AERO_EXTI_COEF, AERO_SCAT_COEF,
      &                     INIT_AERO_DATA, GET_AERO_DATA, AERO_OPTICS_INTERNAL
@@ -186,9 +189,9 @@ C...Allocate needed arrays
             CALL M3EXIT ( PNAME, JDATE, JTIME, XMSG, XSTAT1 )
          END IF
 
-         AERO_SCAT_COEF = 0.0
-         AERO_EXTI_COEF = 0.0
-         AERO_ASYM_FAC  = 0.0
+         AERO_SCAT_COEF = 0.0d0
+         AERO_EXTI_COEF = 0.0d0
+         AERO_ASYM_FAC  = 0.0d0
 
          IF( CALCULATE_EXT_550 )THEN
             ALLOCATE ( AERO_EXTI_550( NLAYS ), STAT = ALLOCSTAT )
@@ -405,7 +408,8 @@ C-----------------------------------------------------------------------
      &                       WAVELENGTH => EFFWL_REF
 
       USE CMAQ_RRTMG_AERO_OPTICAL_UTIL_MODULE, ONLY : AERO_OPTICAL2, AERO_OPTICAL_CS
-
+	  USE HDMod
+	  
       IMPLICIT NONE
 
 C Includes:
@@ -415,7 +419,7 @@ C Arguments:
       INTEGER, INTENT( IN ) :: COL               ! specified column index
       INTEGER, INTENT( IN ) :: ROW               ! specified row index
       INTEGER, INTENT( IN ) :: NLAYS             ! # of vertical layers
-      REAL,    POINTER      :: CGRID( :,:,:,: )
+      TYPE(hyperdual),    POINTER      :: CGRID( :,:,:,: )
 
 C Parameters:
 
@@ -433,39 +437,39 @@ C Local variables:
       CHARACTER( 16 ) :: VNAME            ! varable name
       CHARACTER( 96 ) :: XMSG = ' '
 
-      REAL( 8 ) :: FACTOR
-      REAL( 8 ) :: FRACTION_CORE
-      REAL( 8 ) :: FRACTION_SHELL
-      REAL( 8 ) :: MOMENT3_PORTION
-      REAL( 8 ) :: SUMRI_R_SHELL
-      REAL( 8 ) :: SUMRI_I_SHELL
-      REAL( 8 ) :: SUMRI_R_CORE
-      REAL( 8 ) :: SUMRI_I_CORE
-      REAL( 8 ) :: SUMRI_R
-      REAL( 8 ) :: SUMRI_I
+      TYPE(hyperdual) :: FACTOR
+      TYPE(hyperdual) :: FRACTION_CORE
+      TYPE(hyperdual) :: FRACTION_SHELL
+      TYPE(hyperdual) :: MOMENT3_PORTION
+      TYPE(hyperdual) :: SUMRI_R_SHELL
+      TYPE(hyperdual) :: SUMRI_I_SHELL
+      TYPE(hyperdual) :: SUMRI_R_CORE
+      TYPE(hyperdual) :: SUMRI_I_CORE
+      TYPE(hyperdual) :: SUMRI_R
+      TYPE(hyperdual) :: SUMRI_I
 
-      REAL DGN_CORE       ! geometric mean diameters of aerosol core
-      REAL VOL            ! Total Modal aerosol volume
-      REAL VOL_CORE       ! Modal aerosol volume of aerosol core
-      REAL DGN_SHELL      ! geometric mean diameters of aerosol core
-      REAL VOL_SHELL      ! Modal aerosol volume of aerosol core
-      REAL XXLSG          ! geometric standard deviation
+      TYPE(hyperdual) DGN_CORE       ! geometric mean diameters of aerosol core
+      TYPE(hyperdual) VOL            ! Total Modal aerosol volume
+      TYPE(hyperdual) VOL_CORE       ! Modal aerosol volume of aerosol core
+      TYPE(hyperdual) DGN_SHELL      ! geometric mean diameters of aerosol core
+      TYPE(hyperdual) VOL_SHELL      ! Modal aerosol volume of aerosol core
+      TYPE(hyperdual) XXLSG          ! geometric standard deviation
       REAL MIE_PARAMETER  ! Modal Mie parameter
 
 C***  variables for calculating modal averaged properties per layer and lambda
 
-      COMPLEX NR_SHELL
-      COMPLEX NI_SHELL
-      COMPLEX NR_CORE
-      COMPLEX NI_CORE
+      TYPE(hyperdual_cplx) NR_SHELL
+      TYPE(hyperdual_cplx) NI_SHELL
+      TYPE(hyperdual_cplx) NR_CORE
+      TYPE(hyperdual_cplx) NI_CORE
 
       REAL BEXT_MODE  ! total aerosol extinction coefficient [ 1/m ]
       REAL BSCAT_MODE ! total aerosol scattering coefficient [ 1/m ]
       REAL GBAR_MODE  ! total aerosol asymmetry factor
-      REAL BEXT       ! total aerosol extinction coefficient [ 1/m ]
-      REAL VFAC, BSC  ! unit correction factors
-      REAL BSCAT      ! total aerosol scattering coefficient [ 1/m ]
-      REAL G_BAR      ! total aerosol asymmetry factor
+      TYPE(hyperdual) BEXT       ! total aerosol extinction coefficient [ 1/m ]
+      TYPE(hyperdual) VFAC, BSC  ! unit correction factors
+      TYPE(hyperdual) BSCAT      ! total aerosol scattering coefficient [ 1/m ]
+      TYPE(hyperdual) G_BAR      ! total aerosol asymmetry factor
       REAL INV_LAMBDA ! reciprocal of wavelength [ 1/m ]
       REAL LAMDA_UM   ! wavelength  [ um ]
 
@@ -492,10 +496,10 @@ C *** initialize internal and external dimensions of aerosols
 
       CORE_MOMENT3  = 0.0D+0
       SHELL_MOMENT3 = 0.0D+0
-      BLK_AE_VOL    = 0.0
-      BLK_AE_CONC   = 0.0
-      AE_DGN_SHELL  = 0.0
-      AE_DGN_CORE   = 0.0
+      BLK_AE_VOL    = 0.0d0
+      BLK_AE_CONC   = 0.0d0
+      AE_DGN_SHELL  = 0.0d0
+      AE_DGN_CORE   = 0.0d0
       SUCCESS       = .TRUE.
 
 
@@ -537,7 +541,7 @@ C *** Calculate geometric mean diameters and standard deviations of "wet" size d
                IF ( AERO_MISSING( SPC,MODE ) ) CYCLE   ! skip undefined species
                BLK_AE_CONC( SPC,MODE,L ) = AEROSPC_CONC( SPC,MODE )
 
-               MOMENT3_PORTION = M3_FACTOR( SPC ) * REAL( AEROSPC_CONC( SPC,MODE ), 8 )
+               MOMENT3_PORTION = M3_FACTOR( SPC ) * AEROSPC_CONC( SPC,MODE ) 
                IF ( IS_CORE_SPCS( SPC,MODE ) ) THEN  
                   CORE_MOMENT3( MODE,L )  = CORE_MOMENT3( MODE,L )  + MOMENT3_PORTION
 #ifdef verbose_phot
@@ -560,17 +564,17 @@ C *** Calculate geometric mean diameters and standard deviations of "wet" size d
             END DO SPC_LOOP1
 
 
-            FRACTION_CORE  = CORE_MOMENT3(  MODE,L ) / REAL( MOMENT3_CONC( MODE ), 8 )
-            FRACTION_SHELL = SHELL_MOMENT3( MODE,L ) / REAL( MOMENT3_CONC( MODE ), 8 )
+            FRACTION_CORE  = CORE_MOMENT3(  MODE,L ) / MOMENT3_CONC( MODE )
+            FRACTION_SHELL = SHELL_MOMENT3( MODE,L ) / MOMENT3_CONC( MODE ) 
 
             BLK_AE_LSG  ( MODE,L ) = AEROMODE_LNSG( MODE )
             AE_DGN_SHELL( MODE,L ) = AEROMODE_DIAM( MODE )
 
             IF ( FRACTION_CORE .LT. NEGLECT_FRAC ) THEN
-               AE_DGN_CORE( MODE,L ) = 0.0
+               AE_DGN_CORE( MODE,L ) = 0.0d0
             ELSE
                FACTOR = FRACTION_CORE ** ONE_THIRD
-               AE_DGN_CORE( MODE,L ) = REAL( FACTOR * AEROMODE_DIAM( MODE ) )
+               AE_DGN_CORE( MODE,L ) = FACTOR * AEROMODE_DIAM( MODE ) 
             END IF
 
             IF ( MOMENT3_CONC( MODE ) .GT. AEROMODE( MODE )%MIN_M3CONC ) THEN
@@ -592,10 +596,10 @@ C *** Calculate geometric mean diameters and standard deviations of "wet" size d
 
 C *** Initialize refractive indices then compute
 
-      AE_NR_SHELL = 0.0
-      AE_NI_SHELL = 0.0
-      AE_NR_CORE  = 0.0
-      AE_NI_CORE  = 0.0
+      AE_NR_SHELL = 0.0d0
+      AE_NI_SHELL = 0.0d0
+      AE_NR_CORE  = 0.0d0
+      AE_NI_CORE  = 0.0d0
 
       LOOP_WAVE: DO V = 1, NWL
 
@@ -617,7 +621,7 @@ C *** Initialize refractive indices then compute
 
                   M = REFRACT_INDX_MAP( SPC )
 
-                  MOMENT3_PORTION = M3_FACTOR( SPC ) * REAL( BLK_AE_CONC( SPC,MODE,L ), 8)
+                  MOMENT3_PORTION = M3_FACTOR( SPC ) * BLK_AE_CONC( SPC,MODE,L ) 
      
                   IF ( IS_CORE_SPCS( SPC, MODE ) ) THEN  
                   
@@ -640,22 +644,22 @@ C *** Initialize refractive indices then compute
 C ***       Update output array values
                
                IF ( CORE_MOMENT3( MODE,L ) .GT. 0.0D0 ) THEN
-                   AE_NR_CORE ( MODE,L,V ) = REAL( SUMRI_R_CORE / CORE_MOMENT3( MODE,L ) )
-                   AE_NI_CORE ( MODE,L,V ) = REAL( SUMRI_I_CORE / CORE_MOMENT3( MODE,L ) )
+                   AE_NR_CORE ( MODE,L,V ) =  SUMRI_R_CORE / CORE_MOMENT3( MODE,L ) 
+                   AE_NI_CORE ( MODE,L,V ) =  SUMRI_I_CORE / CORE_MOMENT3( MODE,L ) 
                END IF
                
                IF ( SHELL_MOMENT3( MODE,L ) .GT. 0.0D0 ) THEN
-                   AE_NR_SHELL ( MODE,L,V ) = REAL( SUMRI_R_SHELL / SHELL_MOMENT3( MODE,L ) )
-                   AE_NI_SHELL ( MODE,L,V ) = REAL( SUMRI_I_SHELL / SHELL_MOMENT3( MODE,L ) )
+                   AE_NR_SHELL ( MODE,L,V ) = SUMRI_R_SHELL / SHELL_MOMENT3( MODE,L ) 
+                   AE_NI_SHELL ( MODE,L,V ) = SUMRI_I_SHELL / SHELL_MOMENT3( MODE,L )
                END IF
                
             END DO REFRAC_LOOP
 
 C***loop over mode again for mean modal extinction and scattering properties
         
-            G_BAR = 0.0
-            BEXT  = 0.0
-            BSCAT = 0.0
+            G_BAR = 0.0d0
+            BEXT  = 0.0d0
+            BSCAT = 0.0d0
 
 #ifdef verbose_phot_extra
             if ( L .eq. 1 .and. V .eq. 1 ) then
@@ -691,8 +695,8 @@ C*** factor for aerosols.
 
                IF ( DGN_CORE .GT. 0.0 .AND. DGN_CORE / DGN_SHELL .LT. 0.999 ) THEN
 
-                  VOL_CORE  = PI6 * REAL( CORE_MOMENT3( MODE,L ), 4 )
-                  VOL_SHELL = PI6 * REAL( SHELL_MOMENT3( MODE,L ), 4 )
+                  VOL_CORE  = PI6 * CORE_MOMENT3( MODE,L )
+                  VOL_SHELL = PI6 * SHELL_MOMENT3( MODE,L ) 
 
                   NR_CORE  = CMPLX( AE_NR_CORE( MODE,L,V ), AE_NI_CORE( MODE,L,V ) )
 
@@ -717,7 +721,7 @@ C *** Core-Shell case for optics
      &                                   DGN_SHELL, XXLSG,
      &                                   BEXT_MODE, BSCAT_MODE, GBAR_MODE, SUCCESS )
 
-                  VFAC  = 1.0 ! correction factor 
+                  VFAC  = 1.0d0 ! correction factor 
 
                   IF ( .NOT. SUCCESS ) THEN
      
@@ -746,7 +750,7 @@ C***  and contribution to the overall asymmetry factor
                      IF ( SUCCESS ) CALL AERO_OPTICAL2( LAMDA_UM, NR_SHELL, VOL, 
      &                                   DGN_SHELL, XXLSG,
      &                                   BEXT_MODE, BSCAT_MODE, GBAR_MODE, SUCCESS )
-                     VFAC  = 1.0 ! correction factor 
+                     VFAC  = 1.0d0 ! correction factor 
                   ELSE 
 ! use old fast optics method
                      IF ( SUCCESS ) CALL FAST_OPTICS( AE_NR_SHELL( MODE, L, V ),  
@@ -832,8 +836,8 @@ C***  and contribution to the overall asymmetry factor
             END DO OPTICS_LOOP
 
             AERO_SCAT_COEF( L,V ) = BSCAT
-            AERO_EXTI_COEF( L,V ) = MAX( BEXT, 1.0E-30 )
-            AERO_ASYM_FAC ( L,V ) = G_BAR / MAX( BSCAT, 1.0E-30 )
+            AERO_EXTI_COEF( L,V ) = MAX( BEXT, 1.0D-30 )
+            AERO_ASYM_FAC ( L,V ) = G_BAR / MAX( BSCAT, 1.0D-30 )
 
 #ifdef verbose_phot_extra
             if( l .eq. 1 .and. v .eq. 1)then
@@ -859,14 +863,14 @@ C***  and contribution to the overall asymmetry factor
 !         END IF
          LOOP_550NM: DO L = 1, NLAYS
               IF( USE_ANGSTROM_INTERP )THEN
-                 ANGSTROM_EXPONENT  =  - REAL( LOG( AERO_EXTI_COEF( L,IWL_ANGSTROM_LOWER ) 
-     &                                         / AERO_EXTI_COEF( L,IWL_ANGSTROM_UPPER ) ), 8 )
+                 ANGSTROM_EXPONENT  =  - LOG( AERO_EXTI_COEF( L,IWL_ANGSTROM_LOWER ) 
+     &                                         / AERO_EXTI_COEF( L,IWL_ANGSTROM_UPPER ) )
      &                              *  ANGSTROM_SPAN
 !                AERO_EXTI_550( L ) = LOG( AERO_EXTI_COEF( L,IWL_ANGSTROM_LOWER ) )
 !    &                              + REAL( ANGSTROM_EXPONENT * LOG_ANGSTROM_RATIO, 4 )
 !                AERO_EXTI_550( L ) =  EXP( AERO_EXTI_550( L ) )
                  AERO_EXTI_550( L ) =  AERO_EXTI_COEF( L,IWL_ANGSTROM_LOWER ) 
-     &                              *  REAL( ANGSTROM_RATIO ** ANGSTROM_EXPONENT, 4 )
+     &                              *  ANGSTROM_RATIO ** ANGSTROM_EXPONENT 
 !                 IF ( FIRSTCALL ) THEN
 !                     WRITE( LOGDEV,'(I3,A,7(ES12.4,1X))')L,
 !     &              ' AERO_EXT_LOWER,AERO_EXT_UPPER,EXPONENT,EXPONENT*LOG(RATIO),EXT_550_1,EXT_550_2: ',
@@ -961,6 +965,8 @@ C-----------------------------------------------------------------------
      &                       WAVELENGTH => EFFWL_REF
 
       USE CMAQ_RRTMG_AERO_OPTICAL_UTIL_MODULE, ONLY : AERO_OPTICAL2, AERO_OPTICAL_CS
+      USE HDMod
+      
 
       IMPLICIT NONE
 
@@ -971,7 +977,7 @@ C Arguments:
       INTEGER, INTENT( IN ) :: COL               ! specified column index
       INTEGER, INTENT( IN ) :: ROW               ! specified row index
       INTEGER, INTENT( IN ) :: NLAYS             ! # of vertical layers
-      REAL,    POINTER      :: CGRID( :,:,:,: )
+      TYPE(hyperdual),    POINTER      :: CGRID( :,:,:,: )
 
 C Parameters:
 
@@ -989,18 +995,18 @@ C Local variables:
       CHARACTER( 16 ) :: VNAME            ! varable name
       CHARACTER( 96 ) :: XMSG = ' '
 
-      REAL( 8 ) :: FACTOR
-      REAL( 8 ) :: SUMRI_R
-      REAL( 8 ) :: SUMRI_I
+      TYPE(hyperdual) :: FACTOR
+      TYPE(hyperdual) :: SUMRI_R
+      TYPE(hyperdual) :: SUMRI_I
 
-      REAL VOL            ! Total Modal aerosol volume
-      REAL DGN_SHELL      ! geometric mean diameters of aerosol core
+      TYPE(hyperdual) VOL            ! Total Modal aerosol volume
+      TYPE(hyperdual) DGN_SHELL      ! geometric mean diameters of aerosol core
       REAL VOL_SHELL      ! Modal aerosol volume of aerosol core
-      REAL XXLSG          ! geometric standard deviation
+      TYPE(hyperdual) XXLSG          ! geometric standard deviation
       REAL MIE_PARAMETER  ! Modal Mie parameter
-      REAL SUMRI_R_SHELL
-      REAL SUMRI_I_SHELL
-      REAL MOMENT3_PORTION
+      TYPE(hyperdual) SUMRI_R_SHELL
+      TYPE(hyperdual) SUMRI_I_SHELL
+      TYPE(hyperdual) MOMENT3_PORTION
 
 C***  variables for calculating modal averaged properties per layer and lambda
 
@@ -1010,10 +1016,10 @@ C***  variables for calculating modal averaged properties per layer and lambda
       REAL BEXT_MODE  ! total aerosol extinction coefficient [ 1/m ]
       REAL BSCAT_MODE ! total aerosol scattering coefficient [ 1/m ]
       REAL GBAR_MODE  ! total aerosol asymmetry factor
-      REAL BEXT       ! total aerosol extinction coefficient [ 1/m ]
-      REAL VFAC, BSC  ! unit correction factors
-      REAL BSCAT      ! total aerosol scattering coefficient [ 1/m ]
-      REAL G_BAR      ! total aerosol asymmetry factor
+      TYPE(hyperdual) BEXT       ! total aerosol extinction coefficient [ 1/m ]
+      TYPE(hyperdual) VFAC, BSC  ! unit correction factors
+      TYPE(hyperdual) BSCAT      ! total aerosol scattering coefficient [ 1/m ]
+      TYPE(hyperdual) G_BAR      ! total aerosol asymmetry factor
       REAL INV_LAMBDA ! reciprocal of wavelength [ 1/m ]
       REAL LAMDA_UM   ! wavelength  [ um ]
 
@@ -1039,10 +1045,10 @@ C *** initialize internal and external dimensions of aerosols
 
       CORE_MOMENT3  = 0.0D+0
       SHELL_MOMENT3 = 0.0D+0
-      BLK_AE_VOL    = 0.0
-      BLK_AE_CONC   = 0.0
-      AE_DGN_SHELL  = 0.0
-      AE_DGN_CORE   = 0.0
+      BLK_AE_VOL    = 0.0D0
+      BLK_AE_CONC   = 0.0D0
+      AE_DGN_SHELL  = 0.0D0
+      AE_DGN_CORE   = 0.0D0
       SUCCESS       = .TRUE.
 
       LAY_LOOP1: DO L = 1, NLAYS
@@ -1080,7 +1086,7 @@ C *** Calculate geometric mean diameters and standard deviations of "wet" size d
                BLK_AE_CONC( SPC,MODE,L ) = AEROSPC_CONC( SPC,MODE )
 
                MOMENT3_PORTION          = REAL( M3_FACTOR( SPC ) ) * AEROSPC_CONC( SPC,MODE )
-               SHELL_MOMENT3( MODE,L ) = SHELL_MOMENT3( MODE,L ) + REAL( MOMENT3_PORTION, 8 )
+               SHELL_MOMENT3( MODE,L ) = SHELL_MOMENT3( MODE,L ) + MOMENT3_PORTION
 #ifdef verbose_phot
                if ( col .eq. 1 .and. row .eq. 1 .and. l .eq. 1 ) then
                   write(logdev,5008)aerospc( spc )%name( mode ),moment3_portion, shell_moment3( mode, l )
@@ -1109,8 +1115,8 @@ C *** Calculate geometric mean diameters and standard deviations of "wet" size d
       END DO LAY_LOOP1
 
 C *** Initialize refractive indices then compute
-      AE_NR_SHELL = 0.0
-      AE_NI_SHELL = 0.0
+      AE_NR_SHELL = 0.0d0
+      AE_NI_SHELL = 0.0d0
          
       LOOP_WAVE: DO V = 1, NWL
          LAMDA_UM   = 1.0E-3 * WAVELENGTH( V ) ! convert to micro-meters
@@ -1137,16 +1143,16 @@ C *** Initialize refractive indices then compute
 
                END DO SPC_LOOP2
 C ***       Update output array values
-               VFAC = REAL( 1.0D0 / SHELL_MOMENT3( MODE,L ) ) 
+               VFAC = 1.0D0 / SHELL_MOMENT3( MODE,L ) 
                AE_NR_SHELL ( MODE,L,V ) = SUMRI_R_SHELL * VFAC 
                AE_NI_SHELL ( MODE,L,V ) = SUMRI_I_SHELL * VFAC
             END DO REFRAC_LOOP
 
 C***loop over mode again for mean modal extinction and scattering properties
 
-            G_BAR = 0.0
-            BEXT  = 0.0
-            BSCAT = 0.0
+            G_BAR = 0.0d0
+            BEXT  = 0.0d0
+            BSCAT = 0.0d0
 
 #ifdef verbose_phot_extra
             if ( L .eq. 1 .and. V .eq. 1 ) then
@@ -1183,7 +1189,7 @@ C*** factor for aerosols.
                      IF( SUCCESS ) CALL AERO_OPTICAL2( LAMDA_UM, NR_SHELL, VOL, 
      &                                   DGN_SHELL, XXLSG,
      &                                   BEXT_MODE, BSCAT_MODE, GBAR_MODE, SUCCESS )
-                     VFAC  = 1.0 ! correction factor 
+                     VFAC  = 1.0d0 ! correction factor 
                   ELSE 
 ! use old fast optics method
                      IF ( SUCCESS ) CALL FAST_OPTICS( AE_NR_SHELL( MODE,L,V ),  
@@ -1340,7 +1346,7 @@ C     Willeke, K. and  J. E. Brockmann, Extinction coefficients for
 C     multmodal atmospheric particle size distributions, Atmospheric
 C     Environment, vol. 11, pp 95-999, 1977.
 C-----------------------------------------------------------------------
-
+      use HDMod
       IMPLICIT NONE
 
       INCLUDE SUBST_CONST      ! physical constants
@@ -1351,16 +1357,16 @@ C***arguments
       REAL, INTENT( IN )  :: ALPHV      ! Mie parameter for dgv
       REAL, INTENT( IN )  :: XLNSIG     ! log of geometric standard deviation
 
-      REAL, INTENT( OUT ) :: BETA_EXT   ! normalized extinction coefficient
-      REAL, INTENT( OUT ) :: BETA_SCAT  ! normalized scattering coefficient
+      TYPE(hyperdual), INTENT( OUT ) :: BETA_EXT   ! normalized extinction coefficient
+      TYPE(hyperdual), INTENT( OUT ) :: BETA_SCAT  ! normalized scattering coefficient
       REAL, INTENT( OUT ) :: G          ! asymmetry factor
 
 C***internal variables
 
       REAL NR1, NR2, TAU
       REAL C, CEXT, CSCAT
-      REAL B, BEXT, BSCAT
-      REAL BBFAC
+      TYPE(hyperdual) B, BEXT, BSCAT
+      TYPE(hyperdual) BBFAC
       REAL ALPHA_I
       REAL A, LOGX2, XLNSIG2, MM1
 
@@ -1831,16 +1837,16 @@ C***arguments
       REAL, INTENT( IN )     :: DGN        ! geometric mean diameter, m
       REAL, INTENT( INOUT )  :: SIGMA_G     ! geometric standard deviation
 
-      REAL, INTENT( OUT )    :: BETA_EXT   ! normalized extinction coefficient
-      REAL, INTENT( OUT )    :: BETA_SCAT  ! normalized scattering coefficient
+      TYPE(hyperdual), INTENT( OUT )    :: BETA_EXT   ! normalized extinction coefficient
+      TYPE(hyperdual), INTENT( OUT )    :: BETA_SCAT  ! normalized scattering coefficient
       REAL, INTENT( OUT )    :: G          ! asymmetry factor
 
 C***internal variables
 
       REAL NR1, NR2, TAU
       REAL C, CEXT, CSCAT
-      REAL B, BEXT, BSCAT
-      REAL BBFAC
+      TYPE(hyperdual) B, BEXT, BSCAT
+      TYPE(hyperdual) BBFAC
       REAL ALPHV
       REAL ALPHA_I
       REAL A, LOGX2, XLNSIG, XLNSIG2, MM1

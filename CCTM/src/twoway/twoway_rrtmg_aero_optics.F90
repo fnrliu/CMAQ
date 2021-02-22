@@ -6,8 +6,10 @@
 
 MODULE cmaq_rrtmg_aero_optical_util_module
 
+USE HDMod
+USE HDMod_cplx
 
-     Integer      :: AERO_UTIL_LOG = 0 
+Integer      :: AERO_UTIL_LOG = 0 
 private
 public :: aero_optical, aero_optical2, aero_optical_CS, AERO_UTIL_LOG
 
@@ -897,16 +899,16 @@ contains
 
 ! *** input variables
       real, intent(in)    :: lamda_in   ! wavelengths  [micro-m]
-      complex, intent(in) :: crefin     ! Complex refractive index 
-      real, intent(in)    :: Vol        ! modal aerosol volumes [m**3 /m**3]
-      real, intent(in)    :: dgn        ! geometric mean diameters 
+      TYPE(hyperdual_cplx), intent(in) :: crefin     ! Complex refractive index 
+      TYPE(hyperdual), intent(in)    :: Vol        ! modal aerosol volumes [m**3 /m**3]
+      TYPE(hyperdual), intent(in)    :: dgn        ! geometric mean diameters 
                                         ! for number distribution [ m]
-      real, intent(in)    :: sig        ! geometric standard deviation 
+      TYPE(hyperdual), intent(in)    :: sig        ! geometric standard deviation 
       
 ! *** output variables 
-      real, intent(out)    :: bext         ! extinction coefficient [ 1 / m ]
-      real, intent(out)    :: bscat        ! scattering coefficient [ 1 / m ]
-      real, intent(out)    :: gfac         ! assymetry factor for Mie and molecular scattering
+      TYPE(hyperdual), intent(out)    :: bext         ! extinction coefficient [ 1 / m ]
+      TYPE(hyperdual), intent(out)    :: bscat        ! scattering coefficient [ 1 / m ]
+      TYPE(hyperdual), intent(out)    :: gfac         ! assymetry factor for Mie and molecular scattering
       logical, intent(out) :: success      ! flag for successful calculation
 
       
@@ -936,9 +938,9 @@ contains
 
 ! *** initialize variables
        lamdam1 = 1.0e6 / lamda_in ! lamda now in [ m ]
-       bext  = 0.0
-       bscat = 0.0
-       sum_g = 0.0
+       bext  = 0.0d0
+       bscat = 0.0d0
+       sum_g = 0.0d0
 !      write(20,*) ' j = ', j
        LSIGX = log(sig)
        
@@ -989,24 +991,25 @@ contains
 !     assymetry factors for each wavelength as a sum over the 
 !     individual lognormal modes. Each mode may have a different 
 !     set of refractive indices.
-
+	   
+	   
        IMPLICIT NONE
 ! *** input variables
        real,intent(in)    :: lamda_in   ! wavelengths  [micro-m]                      
-       complex,intent(in) :: refcor     ! Complex refractive index -core
-       complex,intent(in) :: refshell   ! Complex refractive index -shell
-       real,intent(in)    ::  VOLCOR    ! volume of core
-       real,intent(in)    ::  VOLSHELL  ! volume of shell
-       real,intent(in)    ::  DGNCOR    ! geometric mean diameters  
+       TYPE(hyperdual_cplx),intent(in) :: refcor     ! Complex refractive index -core
+       TYPE(hyperdual_cplx),intent(in) :: refshell   ! Complex refractive index -shell
+       TYPE(hyperdual),intent(in)    ::  VOLCOR    ! volume of core
+       TYPE(hyperdual),intent(in)    ::  VOLSHELL  ! volume of shell
+       TYPE(hyperdual),intent(in)    ::  DGNCOR    ! geometric mean diameters  
                                         ! for number distribution [m]
-       real,intent(in)    ::  DGNSHELL  ! geometric mean diameters  
+       TYPE(hyperdual),intent(in)    ::  DGNSHELL  ! geometric mean diameters  
                                         ! for number distribution [m]
-       real,intent(in)    ::  SIG       ! geometric standard deviation 
+       TYPE(hyperdual),intent(in)    ::  SIG       ! geometric standard deviation 
       
 ! *** output variables 
-       real,intent(out)     ::  bext      ! extinction coefficient [ 1 / m ]
-       real,intent(out)     ::  bscat     ! scattering coefficient [ 1 / m ]
-       real,intent(out)     ::  gfac      ! assymetry factor 
+       TYPE(hyperdual),intent(out)     ::  bext      ! extinction coefficient [ 1 / m ]
+       TYPE(hyperdual),intent(out)     ::  bscat     ! scattering coefficient [ 1 / m ]
+       TYPE(hyperdual),intent(out)     ::  gfac      ! assymetry factor 
        logical, intent(OUT) :: success    ! flag for successful calculation
       
 ! *** internal variables

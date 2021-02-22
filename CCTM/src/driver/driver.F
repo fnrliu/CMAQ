@@ -123,8 +123,8 @@ C-----------------------------------------------------------------------
       USE STD_CONC              ! standard CONC
       USE AVG_CONC              ! integral average CONC
       USE WVEL_DEFN             ! derived vertical velocity component
-      USE PA_DEFN, Only: LIPR, LIRR  ! Process Anaylsis control and data variables
-      USE PAGRD_DEFN            ! Process Anaylsis horiz domain specs
+C     USE PA_DEFN, Only: LIPR, LIRR  ! Process Anaylsis control and data variables
+C     USE PAGRD_DEFN            ! Process Anaylsis horiz domain specs
       USE UTILIO_DEFN
       USE RUNTIME_VARS
 
@@ -422,23 +422,23 @@ C Generate the process analysis data: load PA_DEFN module
 
 C Set up horizontal domain and calculate processor-to-subdomain maps for
 C process analysis, if required
-         IF ( LIPR .OR. LIRR ) THEN
-            IF ( .NOT. PAGRD_INIT( MYPE ) ) THEN
-               XMSG = '*** Failure defining PA domain configuration'
-               CALL M3EXIT ( PNAME, JDATE, JTIME, XMSG, XSTAT1 )
-            END IF
-         END IF
+   !       IF ( LIPR .OR. LIRR ) THEN
+   !          IF ( .NOT. PAGRD_INIT( MYPE ) ) THEN
+   !             XMSG = '*** Failure defining PA domain configuration'
+   !             CALL M3EXIT ( PNAME, JDATE, JTIME, XMSG, XSTAT1 )
+   !          END IF
+   !       END IF
 
-         IF ( NSPCSD .GT. MXVARS3 ) THEN
-            WRITE( XMSG,'(5X, A, I5, A)' ) 'The number of variables,', NSPCSD,
-     &      ' to be written to the State CGRID File'
-            CALL LOG_MESSAGE( LOGDEV, XMSG )
-            WRITE( XMSG,'(5X, A, I5)' ) 'exceeds the I/O-API limit:', MXVARS3
-            CALL LOG_MESSAGE( LOGDEV, XMSG )
-            XMSG = 'Recompile with an I/O-API lib having a larger MXVARS3'
-            CALL LOG_MESSAGE( LOGDEV, XMSG )
-            CALL M3EXIT( PNAME, JDATE, JTIME, ' ', XSTAT1 )
-         END IF
+   !       IF ( NSPCSD .GT. MXVARS3 ) THEN
+   !          WRITE( XMSG,'(5X, A, I5, A)' ) 'The number of variables,', NSPCSD,
+   !   &      ' to be written to the State CGRID File'
+   !          CALL LOG_MESSAGE( LOGDEV, XMSG )
+   !          WRITE( XMSG,'(5X, A, I5)' ) 'exceeds the I/O-API limit:', MXVARS3
+   !          CALL LOG_MESSAGE( LOGDEV, XMSG )
+   !          XMSG = 'Recompile with an I/O-API lib having a larger MXVARS3'
+   !          CALL LOG_MESSAGE( LOGDEV, XMSG )
+   !          CALL M3EXIT( PNAME, JDATE, JTIME, ' ', XSTAT1 )
+   !       END IF
 
 C Initialize PCGRID
          IF ( .NOT. PCGRID_INIT () ) THEN
@@ -530,7 +530,7 @@ C Convention: the input file concentration units are always ppmV.
 #ifndef mpas
          CALL CKSUMMER ( 'INITSCEN', CGRID, JDATE, JTIME )
 
-         IF ( LIPR .OR. LIRR ) CALL PA_INIT ( CGRID, JDATE, JTIME, TSTEP )
+         ! IF ( LIPR .OR. LIRR ) CALL PA_INIT ( CGRID, JDATE, JTIME, TSTEP )
 
 C Verify input file header consistency and run duration
          CALL FLCHECK ( JDATE, JTIME, TSTEP( 1 ) )
@@ -832,7 +832,7 @@ C write conc fields
 #ifdef sens
          CALL WR_ASENS ( JDATE, JTIME, TSTEP( 1 ) )
 #endif
-         IF ( LIPR .OR. LIRR ) CALL PA_OUTPUT ( CGRID, JDATE, JTIME )
+         ! IF ( LIPR .OR. LIRR ) CALL PA_OUTPUT ( CGRID, JDATE, JTIME )
          IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 3 )
       END IF
 

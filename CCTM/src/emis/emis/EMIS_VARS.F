@@ -27,6 +27,7 @@
 !-----------------------------------------------------------------------
       USE RUNTIME_VARS
       USE em_param_module
+      USE HDMod
 
       IMPLICIT NONE
 
@@ -76,8 +77,8 @@
          INTEGER  :: LEN
          INTEGER,         ALLOCATABLE :: REF( : )
          CHARACTER( 16 ), ALLOCATABLE :: NAME( : )
-         REAL,            ALLOCATABLE :: FACNUM( :,: )
-         REAL,            ALLOCATABLE :: FACSRF( :,: )
+         real,  ALLOCATABLE :: FACNUM( :,: )
+         real,  ALLOCATABLE :: FACSRF( :,: )
       END TYPE EM_STREAM_MODES
       TYPE( EM_STREAM_MODES ), ALLOCATABLE :: EM_STREAM_SIZE( : )
  

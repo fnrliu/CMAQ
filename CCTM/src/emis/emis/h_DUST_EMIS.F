@@ -72,44 +72,44 @@ C-----------------------------------------------------------------------
       use lus_defn
       use aero_data
       use emis_vars
-      use HDMod
 
+	  use HDMod 
       implicit none 
 
       public ndust_spc, dust_spc,
      &       dust_emis_init, get_dust_emis
       private
 
-      real( 8 ), allocatable, save :: dust_em( :,: )  ! total dust emissions [g/m**3/s]
+      TYPE(hyperdual), allocatable, save :: dust_em( :,: )  ! total dust emissions [g/m**3/s]
 
 C updated values of mass fraction for "freshly emitted dust"
 C based on Kok [PNAS, 2011] and Nabat et al. [ACP, 2012]
-      real( 8 ), parameter :: fracmj = 0.07d0  ! mass fraction assigned to accum mode
-      real( 8 ), parameter :: fracmk = 0.93d0  ! mass fraction assigned to coarse mode
+      real, parameter :: fracmj = 0.07  ! mass fraction assigned to accum mode
+      real, parameter :: fracmk = 0.93  ! mass fraction assigned to coarse mode
 
 C diam`s from fracmj,fracmk-weighted 2 2-bin averages of geom means
 C 2 J-mode bins: 0.1-1.0, 1.0-2.5 um
 C 2 K-mode bins: 2.5-5.0, 5.0-10.0 um
-      real( 8 ), parameter :: dgvj = 1.3914d0  ! geom mean diam of accum mode [um]
-      real( 8 ), parameter :: dgvk = 5.2590d0  ! geom mean diam of coarse mode [um]
-      real( 8 ), parameter :: sigj = 2.0000d0  ! geom std deviation of accum mode flux
-      real( 8 ), parameter :: sigk = 2.0000d0  ! geom std deviation of coarse mode flux
+      real, parameter :: dgvj = 1.3914  ! geom mean diam of accum mode [um]
+      real, parameter :: dgvk = 5.2590  ! geom mean diam of coarse mode [um]
+      real, parameter :: sigj = 2.0000  ! geom std deviation of accum mode flux
+      real, parameter :: sigk = 2.0000  ! geom std deviation of coarse mode flux
 
 C Local Variables:
 
 C Factors for converting 3rd moment emission rates into number and 2nd moment
 C emission rates.  (Diameters in [um] changed to [m] ) See Equations 7b and 7c
 C of Binkowski & Roselle (2003)
-      real( 8 )  :: l2sgj    ! [ln( sigj )] ** 2
-      real( 8 )  :: l2sgk    ! [ln( sigk )] ** 2
-      real( 8 ), save :: factnumj ! = exp( 4.5 * l2sgj ) / dgvj ** 3 * 1.0e18
-      real( 8 ), save :: factnumk ! = exp( 4.5 * l2sgk ) / dgvk ** 3 * 1.0e18
-      real( 8 ), save :: factm2j  ! = exp( 0.5 * l2sgj ) / dgvj * 1.0e6
-      real( 8 ), save :: factm2k  ! = exp( 0.5 * l2sgk ) / dgvk * 1.0e6
-      real( 8 ), save :: factsrfj ! = pi * factm2j
-      real( 8 ), save :: factsrfk ! = pi * factm2k
+      real       :: l2sgj    ! [ln( sigj )] ** 2
+      real       :: l2sgk    ! [ln( sigk )] ** 2
+      real, save :: factnumj ! = exp( 4.5 * l2sgj ) / dgvj ** 3 * 1.0e18
+      real, save :: factnumk ! = exp( 4.5 * l2sgk ) / dgvk ** 3 * 1.0e18
+      real, save :: factm2j  ! = exp( 0.5 * l2sgj ) / dgvj * 1.0e6
+      real, save :: factm2k  ! = exp( 0.5 * l2sgk ) / dgvk * 1.0e6
+      real, save :: factsrfj ! = pi * factm2j
+      real, save :: factsrfk ! = pi * factm2k
 
-      real( 8 )       :: sumsplit, sumfrac
+      real  :: sumsplit, sumfrac
       integer    :: n, idx
 
 C Number of soil types: For WRF there are 16 types;
@@ -119,10 +119,10 @@ C Variables for the windblown dust diagnostic file:
       integer, parameter :: fndust_diag = 19 ! number of fixed diagnostic output vars
       integer, save      :: ndust_diag       ! number of diagnostic output vars
       TYPE(hyperdual), allocatable, save :: diagv( : )  ! diagnostic output variables
-      real( 8 ), allocatable, save :: dustbf( :,:,: ) ! diagnostic accumulate buffer
+      TYPE(hyperdual), allocatable, save :: dustbf( :,:,: ) ! diagnostic accumulate buffer
 
 #ifdef verbose_wbdust
-      real( 8 ), allocatable, save :: sdiagv( : )  ! global sum of each diag output var
+      TYPE(hyperdual), allocatable, save :: sdiagv( : )  ! global sum of each diag output var
 #endif
 
       type diag_type
@@ -165,13 +165,13 @@ C                 ----------------    --------    ------------------------------
      & diag_type( 'ASRFK           ', 'm2 s-1   ', 'coarse mode surface area                   ')/)
   
 C Module shared variables:
-      real( 8 ), allocatable, save :: agland( :,: )   ! agriculture land fraction
-      real( 8 ), allocatable, save :: wmax  ( :,: )   ! max adsorb water percent
-      real( 8 ), allocatable, save :: kvh   ( :,:,: ) ! ratio of vertical flux / horizontal (k factor)
-      real( 8 ), allocatable, save :: sd_ep ( :,: )   ! soil->dust erodiblity potential
-      real( 8 ), allocatable, save :: tfb   ( :,: )   ! transport fraction in and below canopy
+      real, allocatable, save :: agland( :,: )   ! agriculture land fraction
+      real, allocatable, save :: wmax  ( :,: )   ! max adsorb water percent
+      real, allocatable, save :: kvh   ( :,:,: ) ! ratio of vertical flux / horizontal (k factor)
+      real, allocatable, save :: sd_ep ( :,: )   ! soil->dust erodiblity potential
+      real, allocatable, save :: tfb   ( :,: )   ! transport fraction in and below canopy
 
-      real( 8 ) :: eropot( 3 ) =     ! erodible potential of soil components
+      REAL :: eropot( 3 ) =     ! erodible potential of soil components
      &        (/ 0.08,   ! clay
      &           1.00,   ! silt
      &           0.12 /) ! sand
@@ -193,6 +193,7 @@ C   implementation
          use centralized_io_module
 
 C Arguments:
+	     use HDMod 
          integer, intent( in ) :: jdate   ! current model date, coded YYYYDDD
          integer, intent( in ) :: jtime   ! current model time, coded HHMMSS
          integer, intent( in ) :: tstep   ! output time step
@@ -218,12 +219,12 @@ C Local variables:
 
          interface
             subroutine cropcal ( jdate, jtime, agland )
-            integer, intent( in )  :: jdate, jtime
-            real( 8 ),    intent( out ) :: agland( :,: )
+            	integer, intent( in )  :: jdate, jtime
+            	real,    intent( out ) :: agland( :,: )
             end subroutine cropcal
             subroutine tfbelow ( jdate, jtime, tfb )
-            integer, intent( in )  :: jdate, jtime
-            real( 8 ),    intent( out ) :: tfb( :,: )
+            	integer, intent( in )  :: jdate, jtime
+           		real,    intent( out ) :: tfb( :,: )
             end subroutine tfbelow
          end interface
 
@@ -293,9 +294,9 @@ C Allocate private arrays
             call m3warn( pname, jdate, jtime, xmsg )
             success = .false.; return
          end if
-         agland = 0.0   ! array assignment
-         wmax   = 0.0   ! array assignment
-         sd_ep  = 0.0   ! array assignment
+         agland = 0.0d0   ! array assignment
+         wmax   = 0.0d0   ! array assignment
+         sd_ep  = 0.0d0   ! array assignment
 
 C Initialize land use/cover variables
          if ( .not. lus_init( jdate, jtime ) ) then
@@ -436,7 +437,7 @@ C...append diagnostic variables with mass emissions species
                end do
             end do
             
-! remove unused space in diagnm by deallocated and real( 8 )locating to idiag value
+! remove unused space in diagnm by deallocated and reallocating to idiag value
             allocate( diagnm_swap( ndust_diag ), stat = status )
             if ( status .ne. 0 ) then
                xmsg = '*** Failure allocating DIAGNM_SWAP'
@@ -450,7 +451,7 @@ C...append diagnostic variables with mass emissions species
             ndust_diag = idiag
             allocate( diagnm( ndust_diag ), stat = status )
             if ( status .ne. 0 ) then
-               xmsg = '*** Failure real( 8 )locating DIAGNM'
+               xmsg = '*** Failure reallocating DIAGNM'
                call m3warn( pname, jdate, jtime, xmsg )
                success = .false.; return
             end if
@@ -488,8 +489,8 @@ C of Binkowski & Roselle (2003)
          factnumk = 1.0e18 * exp( 4.5 * l2sgk ) / dgvk ** 3
          factm2j  = 1.0e06 * exp( 0.5 * l2sgj ) / dgvj
          factm2k  = 1.0e06 * exp( 0.5 * l2sgk ) / dgvk
-         factsrfj = pi * factm2j
-         factsrfk = pi * factm2k
+         factsrfj =  pi * factm2j
+         factsrfk =  pi * factm2k  
 
 #ifdef verbose_wbdust
          write( logdev,* ) ' '
@@ -510,6 +511,7 @@ C   27 Dec 10 J.Young: initial
          use grid_conf           ! horizontal & vertical domain specifications
          use utilio_defn
 
+	     use HDMod 
          implicit none
 
          include SUBST_FILES_ID  ! file name parameters
@@ -604,11 +606,12 @@ C                       RC -> RCA and RN -> RNA and made it backward compatible
 C       8/12/15 D.Wong: added code to handle parallel I/O implementation
 
 C Arguments:
+	     use HDMod 
          integer, intent( in ) :: jdate      ! current model date, coded YYYYDDD
          integer, intent( in ) :: jtime      ! current model time, coded HHMMSS
          integer, intent( in ) :: tstep( 3 ) ! output time step, sync step, 2way step
-         real( 8 ),    intent( in ) :: rjacm( ncols,nrows ) ! reciprocal Jacobian [1/m]
-         real( 8 ),    intent( in ) :: cellhgt    ! grid-cell height [sigma]
+         real,    intent( in ) :: rjacm( ncols,nrows ) ! reciprocal Jacobian [1/m]
+         real,    intent( in ) :: cellhgt    ! grid-cell height [sigma]
 
 C Includes:
          include SUBST_FILES_ID  ! file name parameters
@@ -622,18 +625,18 @@ C Parameters:
                                            !  3  Silt
                                            !  4  Clay
 
-         real( 8 ), parameter :: f6dpi = 6.0d0 / pi
+         real, parameter :: f6dpi = 6.0 / pi
 
-         real( 8 ), parameter :: mv    = 0.16d0
-         real( 8 ), parameter :: sigv  = 1.45d0
-         real( 8 ), parameter :: betav = 202.0d0
-         real( 8 ), parameter :: sigv_mv  = sigv * mv   ! = 0.232
-         real( 8 ), parameter :: betav_mv = betav * mv  ! = 32.32
-         real( 8 ), parameter :: mb    = 0.5d0
-         real( 8 ), parameter :: sigb  = 1.0d0
-         real( 8 ), parameter :: betab = 90.0d0
-         real( 8 ), parameter :: sigb_mb  = sigb * mb   ! = 0.5
-         real( 8 ), parameter :: betab_mb = betab * mb  ! = 45.0
+         real, parameter :: mv    = 0.16
+         real, parameter :: sigv  = 1.45
+         real, parameter :: betav = 202.0
+         real, parameter :: sigv_mv  = sigv * mv   ! = 0.232
+         real, parameter :: betav_mv = betav * mv  ! = 32.32
+         real, parameter :: mb    = 0.5
+         real, parameter :: sigb  = 1.0
+         real, parameter :: betab = 90.0
+         real, parameter :: sigb_mb  = sigb * mb   ! = 0.5
+         real, parameter :: betab_mb = betab * mb  ! = 45.0
 
          character( 16 ) :: pname = 'GET_DUST_EMIS'
          character( 16 ) :: vname
@@ -645,57 +648,57 @@ C Parameters:
          integer         :: mdate, mtime   ! diagnostic file write date&time
 
                        ! automatic arrays
-         real( 8 )       :: fmoit  ( ncols,nrows )      ! factor of soil moisture on u*t
-         real( 8 )       :: soimt  ( ncols,nrows )      ! gravimetric soil moisture (Kg/Kg)
-         real( 8 )       :: tfa    ( ncols,nrows )      ! transport fraction above canopy
-         real( 8 )       :: wrbuf  ( ncols,nrows )      ! diagnositc write buffer
-         real( 8 )       :: vegfrac( ncols,nrows )      ! vegetation fraction
-         real( 8 )       :: vegfree                     ! 1.0 - vegfrac for this col, row
-         real( 8 )       :: lai    ( ncols,nrows )      ! leaf area index
+         real  :: fmoit  ( ncols,nrows )      ! factor of soil moisture on u*t
+         real  :: soimt  ( ncols,nrows )      ! gravimetric soil moisture (Kg/Kg)
+         real  :: tfa    ( ncols,nrows )      ! transport fraction above canopy
+         TYPE(hyperdual)  :: wrbuf  ( ncols,nrows )      ! diagnositc write buffer
+         real  :: vegfrac( ncols,nrows )      ! vegetation fraction
+         real  :: vegfree                     ! 1.0 - vegfrac for this col, row
+         real  :: lai    ( ncols,nrows )      ! leaf area index
 
-         real( 8 ), allocatable, save :: ustr  ( :,:,: ) ! U* [m/s]
-         real( 8 ), allocatable, save :: qam   ( :,:,: ) ! emis for landuse type [g/m**2/s]
-         real( 8 ), allocatable, save :: elus  ( :,:,: ) ! erodible landuse percent (0~100)
-         real( 8 ), allocatable, save :: fruf  ( :,:,: ) ! surface roughness factor
+         real, allocatable, save :: ustr  ( :,:,: ) ! U* [m/s]
+         real, allocatable, save :: qam   ( :,:,: ) ! emis for landuse type [g/m**2/s]
+         real, allocatable, save :: elus  ( :,:,: ) ! erodible landuse percent (0~100)
+         real, allocatable, save :: fruf  ( :,:,: ) ! surface roughness factor
 
-         real( 8 )       :: edust( 2 )       ! mass emis rate [g/s] per mode (only accum & coarse)
-         real( 8 )       :: sumdfr           ! sum var for desert fraction
-         real( 8 )       :: rlay1hgt         ! reciprocal of layer-1 height [1/m]
-         real( 8 )       :: m3j              ! 3rd moment accumulation (J) mode emis rates [m3/m3/s]
-         real( 8 )       :: m3k              ! 3rd moment coarse mode (K) emis rates [m3/m3/s]
-         real( 8 )       :: fruf2            ! surface roughness factor squared
+         TYPE(hyperdual)  :: edust( 2 )       ! mass emis rate [g/s] per mode (only accum & coarse)
+         TYPE(hyperdual)  :: sumdfr           ! sum var for desert fraction
+         real  :: rlay1hgt         ! reciprocal of layer-1 height [1/m]
+         TYPE(hyperdual)  :: m3j              ! 3rd moment accumulation (J) mode emis rates [m3/m3/s]
+         TYPE(hyperdual)  :: m3k              ! 3rd moment coarse mode (K) emis rates [m3/m3/s]
+         real  :: fruf2            ! surface roughness factor squared
 
          character( 16 ), save :: rc_name, rn_name    ! new names: RC -> RCA, RN -> RNA
          logical, save :: firstime = .true.
 
-         real( 8 )       :: lambda, vegheight
-         real( 8 )       :: z0
-         real( 8 )       :: lambdav           ! vegetation roughness density - Shao et. al [Aus. J. Soil Res., 1996]
-         real( 8 )       :: flxfac1, flxfac2  ! combined soli type mapping factors
-         real( 8 )       :: hflux, vflux      ! horizontal and vertical dust flux
-         real( 8 )       :: jday
+         real       :: lambda, vegheight
+         real       :: z0
+         real       :: lambdav           ! vegetation roughness density - Shao et. al [Aus. J. Soil Res., 1996]
+         real       :: flxfac1, flxfac2  ! combined soli type mapping factors
+         real       :: hflux, vflux      ! horizontal and vertical dust flux
+         real       :: jday
          integer    :: emap( n_dlcat+1 )
 
 C---Height for veg elements
-         real( 8 ) :: hv( 4 )
+         Real :: hv( 4 )
 
 C---Roughness density for solid elements
 C from Darmenova et al. [JGR,2009] and Xi and Sokolik [JGR,2015]
-        real( 8 ) :: lambdab( 4 ) =
+        real :: lambdab( 4 ) =
      &           (/ 0.03,     ! shrubland
      &              0.04,     ! shrubgrass
      &              0.0001,   ! barrenland
      &              0.15 /)   ! cropland
 
 C---Compound for computational efficiency
-         real( 8 ) :: hb_lambdab( 4 ) =
+         real :: hb_lambdab( 4 ) =
      &           (/ 6.0e-04,   ! shrubland
      &              8.0e-04,   ! shrubgrass
      &              2.0e-06,   ! barrenland
      &              3.0e-03 /) ! cropland
 
 C converted to gravimetric [kg/kg]
-         real( 8 ) :: soilml1( nsltyp ) =
+         real :: soilml1( nsltyp ) =
      &           (/ 0.242,     ! Sand
      &              0.257,     ! Loamy Sand
      &              0.286,     ! Sandy Loam
@@ -716,7 +719,7 @@ C converted to gravimetric [kg/kg]
 C---Soil texture: the amount of
 C   1: Coarse sand, 2: Fine-medium sand, 3: Silt, 4: Clay
 C   in each soil type [Kg/Kg]. from Menut et al. [JGR,2013]
-         real( 8 ) :: soiltxt( nsltyp,ndp ) = reshape (
+         real :: soiltxt( nsltyp,ndp ) = reshape (
      &           (/ 0.46,   0.46,   0.05,   0.03,     ! Sand
      &              0.41,   0.41,   0.18,   0.00,     ! Loamy Sand
      &              0.29,   0.29,   0.32,   0.10,     ! Sandy Loam
@@ -735,19 +738,19 @@ C   in each soil type [Kg/Kg]. from Menut et al. [JGR,2013]
      &              0.00,   0.00,   0.00,   0.00 /),  ! Other
      &           (/ nsltyp,4 /), order = (/ 2,1 /) ) ! fill columns first
 
-         real( 8 ) :: soiltxt2( ndp )
+         real :: soiltxt2( ndp )
 
 C---Mean mass median particle diameter (m) for each soil texture type
 C   Chatenet et al. [Sedimentology,1996] and Menut et al. [JGR,2013]
-         real( 8 ) :: dp( ndp ) =
-     &           (/ 690.0D-6,     ! Coarse sand
-     &              210.0D-6,     ! Fine-medium sand
-     &              125.0D-6,     ! Silt
-     &                2.0D-6 /)   ! Clay
+         real :: dp( ndp ) =
+     &           (/ 690.0E-6,     ! Coarse sand
+     &              210.0E-6,     ! Fine-medium sand
+     &              125.0E-6,     ! Silt
+     &                2.0E-6 /)   ! Clay
 
          interface
-            subroutine tfabove ( tfa )
-               real( 8 ),    intent( out ) :: tfa( :,: )
+            subroutine tfabove ( tfa ) 
+               real, intent( out ) :: tfa( :,: )
             end subroutine tfabove
          end interface
 
@@ -807,9 +810,9 @@ C   following the idea of Xi and Sokolik [JGR,2015]
 
 C Initialize windblown dust diagnostics output buffer
          if ( dustem_diag .and. wstep .eq. 0 ) then
-            dustbf = 0.0   ! array assignment
+            dustbf = 0.0d0   ! array assignment
 #ifdef verbose_wbdust
-            sdiagv = 0.0   ! array assignment
+            sdiagv = 0.0d0   ! array assignment
 #endif
          end if
 
@@ -823,13 +826,13 @@ C --------- ###### Start Main Loop ###### ---------
  
          do r = 1, nrows
          do c = 1, ncols
-            dust_em( c,r ) = 0.0
+            dust_em( c,r ) = 0.0d0
             soimt( c,r )   = 0.0
             fmoit( c,r )   = 0.0   ! for diagnostic output visualization
             vegfrac( c,r ) = 0.0
             do m = 1, n_dlcat+1
                ustr( c,r,m ) = 0.0   ! for diagnostic output visualization
-               qam ( c,r,m ) = 0.0
+               qam ( c,r,m ) = 0.0d0
                elus( c,r,m ) = 0.0
                fruf( c,r,m ) = 0.0
                kvh ( c,r,m ) = 0.0
@@ -1076,42 +1079,42 @@ C 2nd moment multiplied by PI to obtain the surface area emissions rate.
 
             if ( dustem_diag ) then
                do m = 1, n_dlcat+1
-                  diagv( m ) = qam( c,r,m )             ! g/m**3/s
+                  diagv( m ) = real(qam( c,r,m ), 8)             ! g/m**3/s
                end do
                n = n_dlcat + 2
                diagv( n ) = dust_em( c,r )              ! g/m**3/s
 
-               sumdfr = 0.0
+               sumdfr = 0.0d0
                do m = 1, n_dlcat+1
-                  diagv( m+n ) = elus( c,r,m )
-                  sumdfr = sumdfr + elus( c,r,m )
+                  diagv( m+n ) = real(elus( c,r,m ), 8)
+                  sumdfr = sumdfr + real(elus( c,r,m ), 8)
                end do
                n = n + n_dlcat + 2
                diagv( n ) = sumdfr
 
                do m = 1, n_dlcat+1
-                  diagv( m+n ) = ustr( c,r,m )
+                  diagv( m+n ) = real(ustr( c,r,m ), 8)
                end do
                n = n + n_dlcat + 1
 
                do m = 1, n_dlcat+1
-                  diagv( m+n ) = kvh( c,r,m )
+                  diagv( m+n ) = real(kvh( c,r,m ), 8)
                end do
                n = n + n_dlcat + 1
 
                do m = 1, n_dlcat+1
-                  diagv( m+n ) = fruf( c,r,m )
+                  diagv( m+n ) = real(fruf( c,r,m ), 8)
                end do
                n = n + n_dlcat + 1
 
-               diagv( n+1  ) = fmoit( c,r )       ! 'Soil_Moist_Fac  '
-               diagv( n+2  ) = sd_ep( c,r )       ! 'Soil_Erode_Pot  '
-               diagv( n+3  ) = wmax ( c,r )       ! 'Mx_Adsrb_H2O_Frc'
-               diagv( n+4  ) = vegfrac( c,r )     ! 'Vegetation_Frac '
-               diagv( n+5  ) = uland( c,r,3 )     ! 'Urban_Cover     '
-               diagv( n+6  ) = uland( c,r,4 )     ! 'Forest_Cover    '
-               diagv( n+7  ) = tfa  ( c,r )       ! 'Trfac_Above_Can '
-               diagv( n+8 )  = tfb  ( c,r )       ! 'Trfac_Inside_Can'
+               diagv( n+1  ) = real(fmoit( c,r ), 8)       ! 'Soil_Moist_Fac  '
+               diagv( n+2  ) = real(sd_ep( c,r ), 8)       ! 'Soil_Erode_Pot  '
+               diagv( n+3  ) = real(wmax ( c,r ), 8)       ! 'Mx_Adsrb_H2O_Frc'
+               diagv( n+4  ) = real(vegfrac( c,r ), 8)     ! 'Vegetation_Frac '
+               diagv( n+5  ) = real(uland( c,r,3 ), 8)     ! 'Urban_Cover     '
+               diagv( n+6  ) = real(uland( c,r,4 ), 8)     ! 'Forest_Cover    '
+               diagv( n+7  ) = real(tfa( c,r ), 8)         ! 'Trfac_Above_Can '
+               diagv( n+8 )  = real(tfb( c,r ), 8)         ! 'Trfac_Inside_Can'
 
                n = n + 8
 
@@ -1144,10 +1147,10 @@ C Multiply by sync step because when write to output we divide by the output ste
 C to get a timestep average.
                do v = 1, ndust_diag
                   dustbf( v,c,r ) = dustbf( v,c,r ) + diagv( v )
-     &                            * float( time2sec( tstep( 2 ) ) )
+     &                            * real(time2sec( tstep( 2 ) ) )
 #ifdef verbose_wbdust
                   sdiagv( v ) = sdiagv( v ) + diagv( v )
-     &                                      * float( time2sec( tstep( 2 ) ) )
+     &                                      * real(time2sec( tstep( 2 ) ) )
 #endif
                end do
             end if   ! dustem_diag
@@ -1175,7 +1178,7 @@ C Then reset the emissions array and local write counter.
                call nextime( mdate, mtime, tstep( 1 ) )
 
 #ifdef verbose_wbdust
-               sdiagv = sdiagv / float( wstep )   ! array assignment
+               sdiagv = sdiagv / real( wstep, 8 )   ! array assignment
                write( logdev,2015 ) jdate, jtime
                do v = 1, ndust_diag
                   if ( diagnm( v )%var(1:4) .ne. 'ANUM' ) then
@@ -1189,7 +1192,7 @@ C Then reset the emissions array and local write counter.
                do v = 1, ndust_diag
                   do r = 1, nrows
                      do c = 1, ncols
-                        wrbuf( c,r ) = dustbf( v,c,r ) / float( wstep )
+                        wrbuf( c,r ) = dustbf( v,c,r ) / real( wstep, 8 )
                      end do
                   end do
 
@@ -1204,7 +1207,7 @@ C Then reset the emissions array and local write counter.
      &               'Timestep written to CTM_DUST_EMIS_1',
      &               'for date and time', mdate, mtime
                wstep = 0
-               dustbf = 0.0   ! array assignment
+               dustbf = 0.0d0   ! array assignment
             end if   !  time to write
          end if   ! dustem_diag
 
@@ -1228,30 +1231,31 @@ C                           ustr( c,r,m ),
 C                           sd_ep( c,r ),
 C                           dens( c,r ) )
 
+	        use HDMod 
             implicit none
 
             include SUBST_CONST   ! for grav
 
             integer, intent( in ) :: ndp
-            real( 8 ),    intent( in ) :: dp( ndp )
-            real( 8 ),    intent( in ) :: soiltxt2( ndp )
-            real( 8 ),    intent( in ) :: fmoit, fruf, ustr, sd_ep, dens
-            real( 8 ) hflux
+            real,    intent( in ) :: dp( ndp )
+            real,    intent( in ) :: soiltxt2( ndp )
+            real,    intent( in ) :: fmoit, fruf, ustr, sd_ep, dens
+            real hflux
 
-            real( 8 ), parameter :: amen = 1.0d0          ! Marticorena and Bergametti [JGR,1997]
-            real( 8 ), parameter :: cfac = 1000.0d0 * amen / grav
-            real( 8 ), parameter :: A = 260.60061d0       ! 0.0123 * 2650.0 * 9.81 / 1.227
-            real( 8 ), parameter :: B = 1.6540342d-06   ! 0.0123 * 0.000165 / 1.227
-            real( 8 ) utstar                            ! threshold U* [m/s]
-            real( 8 ) utem                              ! U term [(m/s)**3]
-            real( 8 ) fac
+            real, parameter :: amen = 1.0          ! Marticorena and Bergametti [JGR,1997]
+            real, parameter :: cfac = 1000.0 * amen / grav
+            real, parameter :: A = 260.60061       ! 0.0123 * 2650.0 * 9.81 / 1.227
+            real, parameter :: B = 1.6540342e-06   ! 0.0123 * 0.000165 / 1.227
+            real utstar                            ! threshold U* [m/s]
+            real utem                              ! U term [(m/s)**3]
+            real fac
             integer n
 
 ! I can't initialize dp this way - it has to be passed in since ndp is variable
 
 C---Mean mass median diameter (m) for each soil texture
 C   [Chatenet et al., Sedimentology 1996 and Menut et al., JGR 2013]
-!           real( 8 ) :: dp( ndp ) =
+!           real :: dp( ndp ) =
 !    &              (/ 690.0E-6,     ! Coarse sand
 !    &                 210.0E-6,     ! Fine-medium sand
 !    &                 125.0E-6,     ! Silt

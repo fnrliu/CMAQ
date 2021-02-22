@@ -42,7 +42,7 @@ C**********************************************************************
       USE UTILIO_DEFN
       USE RXNS_DATA
       USE HRDATA
-      USE PA_IRR_MODULE
+C     USE PA_IRR_MODULE
 #ifdef isam
       USE SA_IRR_DEFN
 #endif

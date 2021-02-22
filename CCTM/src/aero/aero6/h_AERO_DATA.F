@@ -470,7 +470,7 @@ C                                                             fine    coarse
       ! Make sure to ignore any tracer species when performing this calculation.
       Real, Parameter :: dust_dens( n_mode ) = (/ 2200.0, 2156.55, 2536.92 /)
 
-      TYPE(hyperdual), ALLOCATABLE, SAVE    :: DUSTOUTM( :,:,: ) ! Wind-Blown Dust Mass Emiss Rate [ug/m3/s]
+      TYPE(hyperdual), ALLOCATABLE, SAVE    :: DUSTOUTM( :,:,: )   ! Wind-Blown Dust Mass Emiss Rate [ug/m3/s]
       TYPE(hyperdual), ALLOCATABLE, SAVE    :: DUSTOUTN( :,:,: )   ! Wind-Blown Dust Number Emiss Rate [1/m3/s]
       TYPE(hyperdual), ALLOCATABLE, SAVE    :: DUSTOUTS( :,:,: )   ! Wind-Blown Dust Surface Area Emiss Rate [m2/m3/s]
 
@@ -686,9 +686,6 @@ C                  ----------  -------  -------- -------  ------
      &   mode_type('NUMACC ', 'SRFACC ', conmin,  conmin, conmin),
      &   mode_type('NUMCOR ', 'SRFCOR ', conmin,  conmin, conmin)/)
 
-
-C      Getpar stuff below, keep hyperdual for now    QQQ 
-
       TYPE(hyperdual)          :: moment0_conc( n_mode )     ! 0th moment concentration
       TYPE(hyperdual)          :: moment2_conc( n_mode )     ! 2nd moment concentration
       TYPE(hyperdual)          :: moment3_conc( n_mode )     ! 3rd moment concentration
@@ -707,10 +704,10 @@ C Log of geometric standard deviation (calculated by GETPAR )
       TYPE(hyperdual) :: aeromode_lnsg( n_mode )
 
 C Minimum number (calculated in map_aero routine)
-      Real :: aeromode_minNum( n_mode )
+      REAL            :: aeromode_minNum( n_mode )
 
 C Minimum 2nd moment (calculated in map_aero routine)
-      Real :: aeromode_minM2( n_mode )
+      REAL            :: aeromode_minM2( n_mode )
 
 C Mapping for loading from and unloading to CGRID array
       Integer, Allocatable :: aerospc_map( :,: )     ! indices of aero species to CGRID
@@ -1341,7 +1338,7 @@ C-----------------------------------------------------------------------
 
       Use utilio_defn
 
-	use HDMod 
+	  use HDMod 
       Implicit None
 
 C Arguments:
@@ -1408,7 +1405,7 @@ C-----------------------------------------------------------------------
 
       Use aeromet_data, only: f6dpi, f6pi
 
-	use HDMod 
+	  use HDMod 
       Implicit None
 
 C Arguments:
@@ -1529,7 +1526,8 @@ C 11 May 16  B.Murphy  Program Written
 C
 C-----------------------------------------------------------------------
       Use AEROMET_DATA, only : pi, f6pi
-
+	  Use HDMod
+	  
       Implicit None
 
       REAL, INTENT(INOUT)        :: IBCON( : )
@@ -1580,8 +1578,8 @@ C Local variables:
          AER_PAR ( 1, IMODE, 1 ) = NUM
          AER_PAR ( 1, IMODE, 2 ) = M2
          AER_PAR ( 1, IMODE, 3 ) = M3
-         AER_PAR ( 1, IMODE, 4 ) = 0.    
-         AER_PAR ( 1, IMODE, 5 ) = 0.    
+         AER_PAR ( 1, IMODE, 4 ) = 0.0  
+         AER_PAR ( 1, IMODE, 5 ) = 0.0    
 
          IF ( M3 .LT. 1.0e-30 ) THEN
              LSTAT = 4
@@ -1642,7 +1640,6 @@ C Local variables:
 
          ELSEIF ( LSTAT .EQ. 4 ) THEN
            STAT = LSTAT
-
            WHERE( LBCMODE( IMODE,: ) .AND. LBCNUM ) IBCON =
      &                             aeromode_minnum( IMODE )  !Number
            WHERE( LBCMODE( IMODE,: ) .AND. LBCSRF ) IBCON = 
@@ -1652,8 +1649,8 @@ C Local variables:
            AER_PAR( 2, IMODE, 1 ) = aeromode_minnum( IMODE )  !Number
            AER_PAR( 2, IMODE, 2 ) = aeromode_minM2 ( IMODE )  !Second Moment
            AER_PAR( 2, IMODE, 3 ) = conmin
-           AER_PAR( 2, IMODE, 4 ) = 0.
-           AER_PAR( 2, IMODE, 5 ) = 0.
+           AER_PAR( 2, IMODE, 4 ) = 0.0
+           AER_PAR( 2, IMODE, 5 ) = 0.0
          ENDIF
 
       ENDDO

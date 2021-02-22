@@ -40,7 +40,8 @@ public
         hdual_matrix_assign_hdual, hdual_matrix_assign_hdual_matrix, hdual_matrix_assign_dble, &
         hdual_matrix_assign_dble_matrix, hdual_matrix_assign_int, hdual_matrix_assign_int_matrix, & 
         hdual_tens_assign_hdual, hdual_tens_assign_hdual_tens, hdual_tens_assign_dble, & 
-        hdual_tens_assign_dble_tens, hdual_tens_assign_int, hdual_tens_assign_int_tens, hdual_4d_assign_dble
+        hdual_tens_assign_dble_tens, hdual_tens_assign_int, hdual_tens_assign_int_tens, hdual_4d_assign_dble, &
+        hdual_5d_assign_dble
     end interface 
   
     !----- Comparison operators      
@@ -81,12 +82,15 @@ public
             hdual_matrix_plus_dble_sp, hdual_matrix_plus_dble_matrix, hdual_matrix_plus_dble_matrix_sp, &
             hdual_matrix_plus_int, hdual_matrix_plus_int_matrix, hdual_tens_plus_hdual, hdual_tens_plus_hdual_tens, &
             hdual_tens_plus_dble, hdual_tens_plus_dble_sp, hdual_tens_plus_dble_tens, hdual_tens_plus_dble_tens_sp, &
-            hdual_tens_plus_int, hdual_tens_plus_int_tens, dble_plus_hdual, dble_plus_hdual_sp, dble_plus_hdual_array, &
+            hdual_tens_plus_int, hdual_tens_plus_int_tens, hdual_4d_plus_hdual, hdual_4d_plus_hdual_4d, &
+            hdual_4d_plus_dble, hdual_4d_plus_dble_4d, hdual_4d_plus_dble_4d_sp, hdual_4d_plus_int, hdual_4d_plus_int_4d, &
+            dble_plus_hdual, dble_plus_hdual_sp, dble_plus_hdual_array, &
             dble_plus_hdual_array_sp, dble_plus_hdual_matrix, dble_plus_hdual_matrix_sp, dble_plus_hdual_tens, &
             dble_plus_hdual_tens_sp, dble_array_plus_hdual, dble_array_plus_hdual_sp, dble_array_plus_hdual_array, &
             dble_array_plus_hdual_array_sp, dble_matrix_plus_hdual, dble_matrix_plus_hdual_sp, dble_matrix_plus_hdual_matrix, &
             dble_matrix_plus_hdual_matrix_sp, dble_tens_plus_hdual, dble_tens_plus_hdual_sp, dble_tens_plus_hdual_tens, &
-            dble_tens_plus_hdual_tens_sp, int_plus_hdual, int_plus_hdual_array, int_plus_hdual_matrix, &
+            dble_tens_plus_hdual_tens_sp, dble_4d_plus_hdual, dble_4d_plus_hdual_sp, dble_4d_plus_hdual_4d, &
+            dble_4d_plus_hdual_4d_sp, int_plus_hdual, int_plus_hdual_array, int_plus_hdual_matrix, &
             int_plus_hdual_tens, int_array_plus_hdual, int_array_plus_hdual_array, &
             int_matrix_plus_hdual, int_matrix_plus_hdual_matrix, &
             int_tens_plus_hdual, int_tens_plus_hdual_tens
@@ -138,7 +142,9 @@ public
             int_mul_hdual_tens, int_array_mul_hdual, int_matrix_mul_hdual, &
             int_tens_mul_hdual, hdual_array_mul_hdual_array, &
             hdual_array_mul_dble_array ,dble_array_mul_hdual_array, &
-            hdual_array_mul_dble_array_sp ,dble_array_mul_hdual_array_sp
+            hdual_array_mul_dble_array_sp ,dble_array_mul_hdual_array_sp, hdual_matrix_mul_hdual_matrix, &
+            hdual_matrix_mul_dble_matrix, hdual_matrix_mul_dble_matrix_sp, dble_matrix_mul_hdual_matrix, &
+            dble_matrix_mul_hdual_matrix_sp
       end interface
 
 
@@ -147,7 +153,7 @@ public
             hdual_array_div_hdual, hdual_array_div_dble, hdual_array_div_dble_sp, hdual_array_div_int, &
             hdual_matrix_div_hdual, hdual_matrix_div_dble, hdual_matrix_div_dble_sp, hdual_matrix_div_int, &
             hdual_tens_div_hdual, hdual_tens_div_dble, hdual_tens_div_dble_sp, hdual_tens_div_int, &
-            dble_div_hdual, dble_div_hdual_sp, int_div_hdual, &
+            dble_div_hdual, dble_div_hdual_sp, dble_div_hdual_tens_sp, int_div_hdual, &
             dble_array_div_hdual, dble_array_div_hdual_sp, int_array_div_hdual, &
             dble_matrix_div_hdual, dble_matrix_div_hdual_sp, int_matrix_div_hdual, &
             dble_tens_div_hdual, dble_tens_div_hdual_sp, int_tens_div_hdual, hdual_array_div_dble_array, &
@@ -157,7 +163,7 @@ public
       ! Probably need more elemental divisions
 
       interface operator(**)
-        module procedure hdual_pow_hdual, hdual_pow_int, hdual_pow_dble
+        module procedure hdual_pow_hdual, hdual_pow_int, hdual_pow_dble, hdual_pow_dble_sp, dble_pow_hdual
       end interface
 
 
@@ -172,15 +178,19 @@ public
       end interface
       
       interface sign
-        module procedure sign_hdual_hdual
+        module procedure sign_hdual_hdual, sign_hdual_dble, sign_dble_hdual
       end interface
 
       interface max
-        module procedure max_hdual_hdual, max_hdual_dble, max_hdual_dble_sp, max_dble_hdual, max_dble_hdual_sp
+        module procedure max_hdual_hdual, max_hdual_dble, max_hdual_dble_sp, max_dble_hdual, &
+          max_hdual_matrix_dble, max_hdual_matrix_dble_sp, &
+          max_hdual_tens_dble, max_hdual_tens_dble_sp, &
+          max_hdual_4d_dble, max_hdual_4d_dble_sp, max_hdual_array_hdual_array
       end interface
 
       interface min
-        module procedure min_hdual_hdual, min_hdual_dble, min_hdual_dble_sp, min_dble_hdual, min_dble_hdual_sp
+        module procedure min_hdual_hdual, min_hdual_dble, min_hdual_dble_sp, min_dble_hdual, min_dble_hdual_sp, &
+          min_hdual_five
       end interface
 
       interface maxval
@@ -205,6 +215,10 @@ public
       interface log
         module procedure hdlog
       end interface
+
+      interface log10
+        module procedure hdlog10
+      end interface 
       
       interface cos
         module procedure hdcos
@@ -247,7 +261,8 @@ public
       end interface 
 
       interface sum
-        module procedure hdsum, hdsum_2d, hdsum_3d, hdsum_4d, hdsum_mask, hdsum_2d_dim
+        module procedure hdsum, hdsum_2d, hdsum_3d, hdsum_4d, hdsum_mask, hdsum_2d_dim, &
+                         hdsum_3d_dim, hdsum_4d_dim, hdsum_5d_dim
       end interface 
 
       interface real
@@ -578,6 +593,7 @@ public
       
       end subroutine hdual_tens_assign_int_tens
 
+      
       subroutine hdual_4d_assign_dble(qleft, xright)
 
         implicit none
@@ -589,6 +605,20 @@ public
         qleft%dx1x2 = 0.0_PR
 
       end subroutine hdual_4d_assign_dble
+
+
+      subroutine hdual_5d_assign_dble(qleft, xright)
+
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:,:,:), intent(out) :: qleft
+        REAL(PR), intent(in)                               :: xright
+        qleft%x = xright
+        qleft%dx1 = 0.0_PR
+        qleft%dx2 = 0.0_PR
+        qleft%dx1x2 = 0.0_PR
+
+      end subroutine hdual_5d_assign_dble
+
 
 
     !----------------------------------------------------------------!
@@ -1467,6 +1497,7 @@ public
       
       end function hdual_tens_plus_hdual_tens
 
+
       function hdual_tens_plus_dble(qleft, iright) result(res)
 
         implicit none
@@ -1562,6 +1593,133 @@ public
               
       end function hdual_tens_plus_int_tens
 
+
+      function hdual_4d_plus_hdual(qleft, qright) result(res)
+
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qleft
+        TYPE(hyperdual), intent(in)                     :: qright
+        TYPE(hyperdual), &
+          dimension(size(qleft,1),size(qleft,2),size(qleft,3),size(qleft,4))  :: res
+
+        res%x  = qleft%x + qright%x
+        res%dx1 = qleft%dx1 + qright%dx1
+        res%dx2 = qleft%dx2 + qright%dx2
+        res%dx1x2 = qleft%dx1x2 + qright%dx1x2 
+      
+      end function hdual_4d_plus_hdual
+
+      function hdual_4d_plus_hdual_4d(qleft, qright) result(res)
+
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qleft
+        TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qright
+        TYPE(hyperdual), &
+          dimension(size(qright,1),size(qright,2),size(qright,3),size(qright,4))  :: res
+
+        res%x  = qleft%x + qright%x
+        res%dx1 = qleft%dx1 + qright%dx1
+        res%dx2 = qleft%dx2 + qright%dx2
+        res%dx1x2 = qleft%dx1x2 + qright%dx1x2
+      
+      end function hdual_4d_plus_hdual_4d
+
+
+      function hdual_4d_plus_dble(qleft, iright) result(res)
+
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qleft
+        real(PR), intent(in)                            :: iright
+        TYPE(hyperdual), &
+          dimension(size(qleft,1),size(qleft,2),size(qleft,3),size(qleft,4))  :: res
+
+        res%x  = qleft%x + iright
+        res%dx1 = qleft%dx1 
+        res%dx2 = qleft%dx2 
+        res%dx1x2 = qleft%dx1x2
+      
+      end function hdual_4d_plus_dble
+
+
+      function hdual_4d_plus_dble_sp(qleft, iright) result(res)
+  
+          implicit none
+          TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qleft
+          real(SP), intent(in)                            :: iright
+          TYPE(hyperdual), &
+            dimension(size(qleft,1),size(qleft,2),size(qleft,3),size(qleft,4))  :: res
+  
+          res%x  = qleft%x + REAL(iright, PR)
+          res%dx1 = qleft%dx1 
+          res%dx2 = qleft%dx2 
+          res%dx1x2 = qleft%dx1x2
+        
+        end function hdual_4d_plus_dble_sp
+
+
+      function hdual_4d_plus_dble_4d(qleft, iright) result(res)
+
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qleft
+        real(PR), dimension(:,:,:,:), intent(in)        :: iright
+        TYPE(hyperdual), &
+          dimension(size(qleft,1),size(qleft,2),size(qleft,3),size(qleft,4))  :: res
+
+        res%x  = qleft%x + iright
+        res%dx1 = qleft%dx1 
+        res%dx2 = qleft%dx2 
+        res%dx1x2 = qleft%dx1x2
+      
+      end function hdual_4d_plus_dble_4d
+
+
+      function hdual_4d_plus_dble_4d_sp(qleft, iright) result(res)
+
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qleft
+        real(SP), dimension(:,:,:,:), intent(in)        :: iright
+        TYPE(hyperdual), &
+          dimension(size(qleft,1),size(qleft,2),size(qleft,3),size(qleft,4))  :: res
+
+        res%x  = qleft%x + REAL(iright,PR)
+        res%dx1 = qleft%dx1 
+        res%dx2 = qleft%dx2 
+        res%dx1x2 = qleft%dx1x2
+      
+      end function hdual_4d_plus_dble_4d_sp
+       
+      
+      function hdual_4d_plus_int(qleft, iright) result(res)
+              
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qleft
+        integer, intent(in)                             :: iright
+        TYPE(hyperdual), &
+          dimension(size(qleft,1), size(qleft,2), size(qleft,3),size(qleft,4))  :: res
+              
+        res%x  = qleft%x + iright
+        res%dx1 = qleft%dx1 
+        res%dx2 = qleft%dx2 
+        res%dx1x2 = qleft%dx1x2
+              
+      end function hdual_4d_plus_int
+        
+      
+      function hdual_4d_plus_int_4d(qleft, iright) result(res)
+              
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qleft
+        integer, dimension(:,:,:,:), intent(in)         :: iright
+        TYPE(hyperdual), &
+          dimension(size(qleft,1), size(qleft,2), size(qleft,3),size(qleft,4))  :: res
+              
+        res%x = qleft%x + REAL(iright,PR)
+        res%dx1 = qleft%dx1 
+        res%dx2 = qleft%dx2
+        res%dx1x2 = qleft%dx1x2 
+              
+      end function hdual_4d_plus_int_4d
+  
 
       function dble_plus_hdual(xleft, qright) result(res)
               
@@ -1867,6 +2025,70 @@ public
         res%dx1x2 = qright%dx1x2
               
       end function dble_tens_plus_hdual_tens_sp
+
+
+      function dble_4d_plus_hdual(xleft, qright) result(res)
+              
+        implicit none
+        real(PR), dimension(:,:,:,:), intent(in)  :: xleft
+        TYPE(hyperdual), intent(in)               :: qright
+        TYPE(hyperdual), &
+          dimension(size(xleft,1),size(xleft,2),size(xleft,3),size(xleft,4)) :: res
+              
+        res%x = qright%x + xleft
+        res%dx1 = qright%dx1 
+        res%dx2 = qright%dx2 
+        res%dx1x2 = qright%dx1x2
+              
+      end function dble_4d_plus_hdual
+
+
+      function dble_4d_plus_hdual_sp(xleft, qright) result(res)
+              
+        implicit none
+        real(SP), dimension(:,:,:,:), intent(in)  :: xleft
+        TYPE(hyperdual), intent(in)               :: qright
+        TYPE(hyperdual), &
+          dimension(size(xleft,1),size(xleft,2),size(xleft,3),size(xleft,4)) :: res
+              
+        res%x = qright%x + REAL(xleft,SP)
+        res%dx1 = qright%dx1 
+        res%dx2 = qright%dx2 
+        res%dx1x2 = qright%dx1x2
+              
+      end function dble_4d_plus_hdual_sp
+
+
+      function dble_4d_plus_hdual_4d(xleft, qright) result(res)
+              
+        implicit none
+        real(PR), dimension(:,:,:,:), intent(in)        :: xleft
+        TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qright
+        TYPE(hyperdual), &
+          dimension(size(xleft,1),size(xleft,2),size(xleft,3),size(xleft,4)) :: res
+              
+        res%x = qright%x + xleft
+        res%dx1 = qright%dx1 
+        res%dx2 = qright%dx2 
+        res%dx1x2 = qright%dx1x2
+              
+      end function dble_4d_plus_hdual_4d
+
+
+      function dble_4d_plus_hdual_4d_sp(xleft, qright) result(res)
+              
+        implicit none
+        real(SP), dimension(:,:,:,:), intent(in)        :: xleft
+        TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: qright
+        TYPE(hyperdual), &
+          dimension(size(xleft,1),size(xleft,2),size(xleft,3),size(xleft,4)) :: res
+              
+        res%x = qright%x + REAL(xleft,PR)
+        res%dx1 = qright%dx1 
+        res%dx2 = qright%dx2 
+        res%dx1x2 = qright%dx1x2
+              
+      end function dble_4d_plus_hdual_4d_sp
 
 
       function int_plus_hdual(ileft, qright) result(res)
@@ -3887,6 +4109,7 @@ public
 
       end function hdual_array_mul_hdual_array
 
+
       function hdual_array_mul_dble_array(qleft, xright) result(res)
         ! Elemental multiplication, size(qleft) == size(qright)
         implicit none
@@ -3945,6 +4168,81 @@ public
         res%dx1x2 = qright%dx1x2 * REAL(xleft,PR)
 
       end function dble_array_mul_hdual_array_sp
+
+
+      function hdual_matrix_mul_hdual_matrix(qleft, qright) result(res)
+
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:), intent(in)   :: qleft
+        TYPE(hyperdual), dimension(:,:,:), intent(in)   :: qright
+        TYPE(hyperdual), dimension(size(qleft,1),size(qleft,2),size(qleft,3))    :: res
+
+        res%x = qleft%x * qright%x
+        res%dx1 = qleft%x * qright%dx1 + qleft%dx1 * qright%x
+        res%dx2 = qleft%x * qright%dx2 + qleft%dx2 * qright%x
+        res%dx1x2 = qleft%x * qright%dx1x2 + qleft%dx1 * qright%dx2 + qleft%dx2 * qright%dx1 + qleft%dx1x2 * qright%x
+
+      end function hdual_matrix_mul_hdual_matrix
+
+
+      function hdual_matrix_mul_dble_matrix(qleft, xright) result(res)
+        
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:), intent(in)   :: qleft
+        real(PR), dimension(:,:,:), intent(in)          :: xright
+        TYPE(hyperdual), dimension(size(qleft,1),size(qleft,2),size(qleft,3))    :: res
+        
+        res%x = qleft%x * xright
+        res%dx1 = qleft%dx1 * xright
+        res%dx2 = qleft%dx2 * xright
+        res%dx1x2 = qleft%dx1x2 * xright
+
+      end function hdual_matrix_mul_dble_matrix
+
+
+      function hdual_matrix_mul_dble_matrix_sp(qleft, xright) result(res)
+        
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:), intent(in)   :: qleft
+        real(SP), dimension(:,:,:), intent(in)          :: xright
+        TYPE(hyperdual), dimension(size(qleft,1),size(qleft,2),size(qleft,3))    :: res
+        
+        res%x = qleft%x * REAL(xright,PR)
+        res%dx1 = qleft%dx1 * REAL(xright,PR)
+        res%dx2 = qleft%dx2 * REAL(xright,PR)
+        res%dx1x2 = qleft%dx1x2 * REAL(xright,PR)
+
+      end function hdual_matrix_mul_dble_matrix_sp
+
+
+      function dble_matrix_mul_hdual_matrix(xleft, qright) result(res)
+        
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:), intent(in)   :: qright
+        real(PR), dimension(:,:,:), intent(in)          :: xleft
+        TYPE(hyperdual), dimension(size(qright,1),size(qright,2),size(qright,3))    :: res
+        
+        res%x = qright%x * xleft
+        res%dx1 = qright%dx1 * xleft
+        res%dx2 = qright%dx2 * xleft
+        res%dx1x2 = qright%dx1x2 * xleft
+        
+      end function dble_matrix_mul_hdual_matrix
+
+
+      function dble_matrix_mul_hdual_matrix_sp(xleft, qright) result(res)
+        
+        implicit none
+        TYPE(hyperdual), dimension(:,:,:), intent(in)   :: qright
+        real(SP), dimension(:,:,:), intent(in)          :: xleft
+        TYPE(hyperdual), dimension(size(qright,1),size(qright,2),size(qright,3))    :: res
+        
+        res%x = qright%x * REAL(xleft,PR)
+        res%dx1 = qright%dx1 * REAL(xleft,PR)
+        res%dx2 = qright%dx2 * REAL(xleft,PR)
+        res%dx1x2 = qright%dx1x2 * REAL(xleft,PR)
+        
+      end function dble_matrix_mul_hdual_matrix_sp
 
 
 
@@ -4064,6 +4362,7 @@ public
           
       end function hdual_array_div_int
       
+
       function hdual_matrix_div_hdual(qleft, qright) result(res)
       
         implicit none
@@ -4076,6 +4375,7 @@ public
         res = qleft * inv
       
       end function hdual_matrix_div_hdual
+      
       
       function hdual_matrix_div_dble(qleft, iright) result(res)
       
@@ -4210,6 +4510,26 @@ public
       
       end function dble_div_hdual_sp
 
+
+      function dble_div_hdual_tens_sp(xleft, qright) result(res)
+        
+        implicit none
+        real(SP), intent(in)    :: xleft
+        TYPE(hyperdual), dimension(:,:,:), intent(in) :: qright
+        TYPE(hyperdual), dimension(size(qright,1),size(qright,2),size(qright,3)) :: res
+        TYPE(hyperdual), dimension(size(qright,1),size(qright,2),size(qright,3)) :: inv 
+        Integer                                       :: I,J,K
+
+        do I = 1, size(qright,1)
+          do J = 1, size(qright,2)
+            do K = 1, size(qright,3)
+              inv(I,J,K) = hdual_pow_dble(qright(I,J,K), -1.0_PR)
+              res(I,J,K) = REAL(xleft, PR) * inv(I,J,K)
+            enddo 
+          enddo
+        enddo
+        
+      end function dble_div_hdual_tens_sp
       
       function int_div_hdual(ileft, qright) result(res)
       
@@ -4414,6 +4734,7 @@ public
 
         end function hdual_pow_hdual
 
+
       function hdual_pow_dble(qleft, iright) result(res)
       !!!!DEC$ ATTRIBUTES DLLEXPORT, ALIAS : "hdual_pow_dble" :: hdual_pow_dble
       
@@ -4448,6 +4769,40 @@ public
       end function hdual_pow_dble
       
 
+      function hdual_pow_dble_sp(qleft, iright) result(res)
+        !!!!DEC$ ATTRIBUTES DLLEXPORT, ALIAS : "hdual_pow_dble" :: hdual_pow_dble
+        
+          implicit none
+          TYPE(hyperdual), intent(in) :: qleft
+          real(SP), intent(in)        :: iright
+          real(PR)                    :: xval
+          real(PR)                    :: tol
+          real(PR)                    :: deriv
+          TYPE(hyperdual)             :: res
+  
+          xval = qleft%x 
+          tol = 1.0e-15
+          if (abs(xval) < tol) then
+            
+            if (xval >= 0) then 
+              xval = tol
+            endif 
+  
+            if (xval < 0) then
+              xval = -tol
+            endif
+  
+          endif 
+          deriv = REAL(iright,PR) * xval**(REAL(iright,PR) - 1.0_PR)
+          
+          res%x = qleft%x**REAL(iright,PR)
+          res%dx1 = qleft%dx1 * deriv
+          res%dx2 = qleft%dx2 * deriv
+          res%dx1x2 = qleft%dx1x2 * deriv + REAL(iright,PR) * (REAL(iright,PR) - 1.0_PR) * &
+                        qleft%dx1 * qleft%dx2 * xval**(REAL(iright,PR) - 2.0_PR)
+        
+        end function hdual_pow_dble_sp
+
       function hdual_pow_int(qleft, iright) result(res)
       !!!!DEC$ ATTRIBUTES DLLEXPORT, ALIAS : "hdual_pow_int" :: hdual_pow_int
       
@@ -4481,6 +4836,17 @@ public
 
       end function hdual_pow_int
         
+
+      function dble_pow_hdual(xleft, qright) result(res) 
+          
+          implicit none
+          real(PR), intent(in)        :: xleft
+          TYPE(hyperdual), intent(in) :: qright
+          TYPE(hyperdual)             :: res
+
+          res = hdexp(qright*log(xleft))
+
+      end function dble_pow_hdual
 
 
     !----------------------------------------------------------------!
@@ -4583,6 +4949,41 @@ public
         end function sign_hdual_hdual
 
 
+        function sign_hdual_dble(val_in, sign_in) result(val_out)
+          
+          implicit none
+          TYPE(hyperdual), intent(in)   :: val_in
+          real(PR),intent(in)           :: sign_in
+          TYPE(hyperdual)               :: val_out
+
+          if (sign_in .GE. (0.0_PR)) then
+            val_out = abs(val_in)
+          else
+            val_out = abs(val_in) * (-1.0_PR)
+          endif
+
+        end function sign_hdual_dble
+
+
+        function sign_dble_hdual(val_in, sign_in) result(val_out)
+          
+          implicit none
+          TYPE(hyperdual), intent(in)   :: sign_in
+          real(PR), intent(in)          :: val_in
+          real(PR)                      :: val_out
+
+          if (REAL(sign_in%x,PR).GE.(0.0_PR)) then
+            val_out = abs(val_in)
+          else
+            val_out = abs(val_in) * (-1.0_PR)
+          endif
+
+        end function sign_dble_hdual
+
+
+        
+
+
       !----- MAX
         function max_hdual_hdual(q1, q2) result(q_out)
 
@@ -4631,6 +5032,7 @@ public
   
           end function max_hdual_dble_sp
 
+
         function max_dble_hdual(x1, q2) result(q_out)
 
           implicit none
@@ -4647,22 +5049,332 @@ public
         end function max_dble_hdual
 
 
-        function max_dble_hdual_sp(x1, q2) result(q_out)
+        ! function max_dble_hdual_sp(x1, q2) result(q_out)
+
+        !   implicit none
+        !   real(SP), intent(in)        :: x1
+        !   TYPE(hyperdual), intent(in) :: q2
+        !   TYPE(hyperdual)             :: q_out
+
+        !   if (REAL(x1,PR).GE.q2) then
+        !     q_out = REAL(x1,PR)
+        !   else
+        !     q_out = q2
+        !   endif
+
+        ! end function max_dble_hdual_sp
+
+
+        function max_hdual_matrix_dble(q1,x1) result(q_out)
+          
+          implicit none
+          real(PR), intent(in)                               :: x1
+          TYPE(hyperdual), dimension(:,:), intent(in)        :: q1
+          TYPE(hyperdual), dimension(size(q1,1),size(q1,2))  :: q_out
+          Integer                                            :: I,J
+
+          do I = 1, size(q1,1)
+            do J = 1, size(q1, 2)
+              if (q1(I,J) > x1) then
+                q_out(I,J) = q1(I,J)
+              else
+                q_out(I,J) = x1
+              endif
+            enddo 
+          enddo 
+
+        end function max_hdual_matrix_dble
+
+
+        function max_hdual_matrix_dble_sp(q1,x1) result(q_out)
+          
+          implicit none
+          real(SP), intent(in)                                 :: x1
+          TYPE(hyperdual), dimension(:,:), intent(in)          :: q1
+          TYPE(hyperdual), dimension(size(q1,1),size(q1,2))    :: q_out
+          Integer                                              :: I,J
+
+          do I = 1, size(q1,1)
+            do J = 1, size(q1, 2)
+              if (q1(I,J) > REAL(x1,PR)) then
+                q_out(I,J) = q1(I,J)
+              else
+                q_out(I,J) = REAL(x1,PR)
+              endif
+            enddo 
+          enddo 
+
+        end function max_hdual_matrix_dble_sp
+
+
+        ! function max_dble_hdual_matrix(x1,q1) result(q_out)
+          
+        !   implicit none
+        !   real(PR), intent(in)                               :: x1
+        !   TYPE(hyperdual), dimension(:,:), intent(in)        :: q1
+        !   TYPE(hyperdual), dimension(size(q1,1),size(q1,2))  :: q_out
+        !   Integer                                            :: I,J
+
+        !   do I = 1, size(q1,1)
+        !     do J = 1, size(q1, 2)
+        !       if (q1(I,J) > x1) then
+        !         q_out(I,J) = q1(I,J)
+        !       else
+        !         q_out(I,J) = x1
+        !       endif
+        !     enddo 
+        !   enddo 
+
+        ! end function max_dble_hdual_matrix
+
+
+        ! function max_dble_hdual_matrix_sp(x1,q1) result(q_out)
+          
+        !   implicit none
+        !   real(SP), intent(in)                                 :: x1
+        !   TYPE(hyperdual), dimension(:,:), intent(in)          :: q1
+        !   TYPE(hyperdual), dimension(size(q1,1),size(q1,2))    :: q_out
+        !   Integer                                              :: I,J
+
+        !   do I = 1, size(q1,1)
+        !     do J = 1, size(q1, 2)
+        !       if (q1(I,J) > REAL(x1,PR)) then
+        !         q_out(I,J) = q1(I,J)
+        !       else
+        !         q_out(I,J) = REAL(x1,PR)
+        !       endif
+        !     enddo 
+        !   enddo 
+
+        ! end function max_dble_hdual_matrix_sp
+
+
+        function max_hdual_tens_dble(q1,x1) result(q_out)
+          
+          implicit none
+          real(PR), intent(in)                                            :: x1
+          TYPE(hyperdual), dimension(:,:,:), intent(in)                   :: q1
+          TYPE(hyperdual), dimension(size(q1,1),size(q1,2),size(q1,3))    :: q_out
+          Integer                                                         :: I,J,K
+
+          do I = 1, size(q1,1)
+            do J = 1, size(q1, 2)
+              do K = 1, size(q1, 3)
+                if (q1(I,J,K) > x1) then
+                  q_out(I,J,K) = q1(I,J,K)
+                else
+                  q_out(I,J,K) = x1
+                endif
+              enddo 
+            enddo 
+          enddo 
+
+        end function max_hdual_tens_dble
+
+
+        function max_hdual_tens_dble_sp(q1,x1) result(q_out)
+          
+          implicit none
+          real(SP), intent(in)                                              :: x1
+          TYPE(hyperdual), dimension(:,:,:), intent(in)                     :: q1
+          TYPE(hyperdual), dimension(size(q1,1),size(q1,2),size(q1,3))      :: q_out
+          Integer                                                           :: I,J,K
+
+          do I = 1, size(q1,1)
+            do J = 1, size(q1, 2)
+              do K = 1, size(q1, 3)
+                if (q1(I,J,K) > REAL(x1,PR)) then
+                  q_out(I,J,K) = q1(I,J,K)
+                else
+                  q_out(I,J,K) = REAL(x1,PR)
+                endif
+              enddo 
+            enddo 
+          enddo 
+
+        end function max_hdual_tens_dble_sp
+
+
+        ! function max_dble_hdual_tens(x1,q1) result(q_out)
+          
+        !   implicit none
+        !   real(PR), intent(in)                                            :: x1
+        !   TYPE(hyperdual), dimension(:,:,:), intent(in)                   :: q1
+        !   TYPE(hyperdual), dimension(size(q1,1),size(q1,2),size(q1,3))    :: q_out
+        !   Integer                                                         :: I,J,K
+
+        !   do I = 1, size(q1,1)
+        !     do J = 1, size(q1, 2)
+        !       do K = 1, size(q1, 3)
+        !         if (q1(I,J,K) > x1) then
+        !           q_out(I,J,K) = q1(I,J,K)
+        !         else
+        !           q_out(I,J,K) = REAL(x1,PR)
+        !         endif
+        !       enddo
+        !     enddo 
+        !   enddo 
+
+        ! end function max_dble_hdual_tens
+
+
+
+        ! function max_dble_hdual_tens_sp(x1,q1) result(q_out)
+          
+        !   implicit none
+        !   real(SP), intent(in)                                            :: x1
+        !   TYPE(hyperdual), dimension(:,:,:), intent(in)                     :: q1
+        !   TYPE(hyperdual), dimension(size(q1,1),size(q1,2),size(q1,3))    :: q_out
+        !   Integer                                                         :: I,J,K
+
+        !   do I = 1, size(q1,1)
+        !     do J = 1, size(q1, 2)
+        !       do K = 1, size(q1, 3)
+        !         if (q1(I,J,K) > REAL(x1,PR)) then
+        !           q_out(I,J,K) = q1(I,J,K)
+        !         else
+        !           q_out(I,J,K) = REAL(x1,PR)
+        !         endif
+        !       enddo
+        !     enddo 
+        !   enddo 
+
+        ! end function max_dble_hdual_tens_sp
+
+
+
+        function max_hdual_4d_dble(q1,x1) result(q_out)
+
+          ! some function use max as maxval, for 4d hyperdual array
 
           implicit none
-          real(SP), intent(in)        :: x1
-          TYPE(hyperdual), intent(in) :: q2
-          TYPE(hyperdual)             :: q_out
+          TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: q1
+          Integer                                         :: I,J,K,L
+          Real(PR)                                        :: x1
+          TYPE(hyperdual), &
+            dimension(size(q1,1),size(q1,2),size(q1,3),size(q1,4))   :: q_out
 
-          if (REAL(x1,PR).GE.q2) then
-            q_out = REAL(x1,PR)
-          else
-            q_out = q2
-          endif
+          do I = 1,size(q1, 1)
+            do J = 1,size(q1, 2)
+              do K = 1,size(q1, 3)
+                do L = 1,size(q1, 4)
+                  if (q1(I,J,K,L) > x1) then
+                    q_out(I,J,K,L) = q1(I,J,K,L)
+                  else
+                    q_out(I,J,K,L) = x1
+                  endif
+                enddo
+              enddo
+            enddo
+          enddo
 
-        end function max_dble_hdual_sp
+        end function max_hdual_4d_dble
 
 
+        ! function max_dble_hdual_4d(x1,q1) result(q_out)
+
+  
+        !   implicit none
+        !   TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: q1
+        !   Integer                                         :: I,J,K,L
+        !   Real(PR)                                        :: x1
+        !   TYPE(hyperdual), &
+        !     dimension(size(q1,1),size(q1,2),size(q1,3),size(q1,4))   :: q_out
+
+        !   do I = 1,size(q1, 1)
+        !     do J = 1,size(q1, 2)
+        !       do K = 1,size(q1, 3)
+        !         do L = 1,size(q1, 4)
+        !           if (q1(I,J,K,L) > x1) then
+        !             q_out(I,J,K,L) = q1(I,J,K,L)
+        !           else
+        !             q_out(I,J,K,L) = x1
+        !           endif
+        !         enddo
+        !       enddo
+        !     enddo
+        !   enddo
+
+        ! end function max_dble_hdual_4d
+
+
+        function max_hdual_4d_dble_sp(q1,x1) result(q_out)
+
+          ! some function use max as maxval, for 4d hyperdual array
+
+          implicit none
+          TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: q1
+          Integer                                         :: I,J,K,L
+          Real(SP)                                        :: x1
+          TYPE(hyperdual), &
+            dimension(size(q1,1),size(q1,2),size(q1,3),size(q1,4))   :: q_out
+
+          do I = 1,size(q1, 1)
+            do J = 1,size(q1, 2)
+              do K = 1,size(q1, 3)
+                do L = 1,size(q1, 4)
+                  if (q1(I,J,K,L) > x1) then
+                    q_out(I,J,K,L) = q1(I,J,K,L)
+                  else
+                    q_out(I,J,K,L) = REAL(x1,PR)
+                  endif
+                enddo
+              enddo
+            enddo
+          enddo
+
+        end function max_hdual_4d_dble_sp
+
+
+
+        ! function max_dble_hdual_4d_sp(x1,q1) result(q_out)
+
+        !   ! some function use max as maxval, for 4d hyperdual array
+
+        !   implicit none
+        !   TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: q1
+        !   Integer                                         :: I,J,K,L
+        !   Real(SP)                                        :: x1
+        !   TYPE(hyperdual), &
+        !     dimension(size(q1,1),size(q1,2),size(q1,3),size(q1,4))   :: q_out
+
+        !   do I = 1,size(q1, 1)
+        !     do J = 1,size(q1, 2)
+        !       do K = 1,size(q1, 3)
+        !         do L = 1,size(q1, 4)
+        !           if (q1(I,J,K,L) > x1) then
+        !             q_out(I,J,K,L) = q1(I,J,K,L)
+        !           else
+        !             q_out(I,J,K,L) = REAL(x1,PR)
+        !           endif
+        !         enddo
+        !       enddo
+        !     enddo
+        !   enddo
+
+        ! end function max_dble_hdual_4d_sp
+
+
+
+        function max_hdual_array_hdual_array(q1, q2) result(q_out)
+
+          implicit none
+          TYPE(hyperdual), dimension(:), intent(in) :: q1
+          TYPE(hyperdual), dimension(:), intent(in) :: q2
+          TYPE(hyperdual), dimension(size(q1))      :: q_out
+          Integer                                   :: I
+
+          do I = 1, size(q1)
+            if (q1(I) > q2(I)) then
+              q_out(I) = q1(I)
+            else 
+              q_out(I) = q2(I)
+            endif
+          enddo 
+          
+        end function max_hdual_array_hdual_array 
+
+        
       !----- MIN
         function min_hdual_hdual(q1, q2) result(q_out)
 
@@ -4741,7 +5453,31 @@ public
             q_out = q2
           endif
 
-        end function min_dble_hduaL_sp
+        end function min_dble_hdual_sp
+
+
+        function min_hdual_five(q1, q2, q3, q4, q5) result(q_out)
+
+          implicit none
+          TYPE(hyperdual), intent(in)   :: q1,q2,q3,q4,q5
+          integer                       :: I
+          TYPE(hyperdual), dimension(4) :: qlst
+          TYPE(hyperdual)               :: q_out
+	      
+	      q_out = q1
+	      qlst(1) = q2
+	      qlst(2) = q3
+	      qlst(3) = q4
+	      qlst(4) = q5
+	      
+	      do I = 1, 4
+	      	if (qlst(I) .LE. q_out) then
+	      		q_out = qlst(I)
+	      	endif
+	      enddo 
+          
+        
+        end function min_hdual_five
         
 
       !----- Maxval
@@ -5111,6 +5847,17 @@ public
         end function hdlog
 
 
+        function hdlog10(q) result(qlog10)
+
+          implicit none
+          TYPE(hyperdual), intent(in) :: q
+          TYPE(hyperdual)             :: qlog10
+
+          qlog10 = hdlog(q) / log(10.0_PR)
+
+        end function hdlog10
+
+
         function hdcos(q) result(qcos)
           
           implicit none
@@ -5437,7 +6184,7 @@ public
 
         function hdsum_5d_dim(q, dim) result(qsum)
 
-          ! 4d --> 3d, reduction along a dimension
+          ! 5d --> 4d, reduction along a dimension
           
           implicit none
           TYPE(hyperdual), dimension(:,:,:,:,:), intent(in) :: q
@@ -5586,5 +6333,18 @@ public
         end function real_hdual
 
 
+        function int_hdual(qleft) result(iright)
+          ! convert hyperdual to int, throw away the sensitivity information
+          ! need to be very careful when using
+          
+          TYPE(hyperdual), intent(in) :: qleft
+          integer                     :: iright
+          
+          iright = int(qleft%x)
+          
+        end function int_hdual
+		
+		
+		
     end module HDMod
 

@@ -64,7 +64,7 @@ C-----------------------------------------------------------------------
       USE AERO_DATA, ONLY: N_EM_AERO_REF, N_MODE
       USE EMIS_VARS, ONLY: EMLAYS, EM_STREAM_SIZE, N_EM_SRM
 
-	use HDMod 
+	  use HDMod 
       IMPLICIT NONE
       SAVE 
 C aerosol emissions: [ppmv/s] for mass & number spcs, [m2/mol/s] for surface area spcs
@@ -75,7 +75,7 @@ C aerosol emissions: [ppmv/s] for mass & number spcs, [m2/mol/s] for surface are
       PRIVATE
 
 C Variables for converting mass emissions rate to number emissions rate
-      TYPE(hyperdual)   :: FACNUM( N_EM_AERO_REF,N_MODE )
+      TYPE(hyperdual)    :: FACNUM( N_EM_AERO_REF,N_MODE )
 
 C Variables for converting mass emissions rate to 2nd moment emissions rate
       TYPE(hyperdual)    :: FACSRF( N_EM_AERO_REF,N_MODE )
@@ -84,8 +84,8 @@ C Variables for Saving split factors between emission modes
       TYPE(hyperdual), ALLOCATABLE :: SD_SPLIT( :,: )
 
 C Variables for the thickness and volume of each grid cell
-      TYPE(hyperdual),    ALLOCATABLE :: CELLHGT( : ) ! grid-cell height [sigma]
-      TYPE(hyperdual),    ALLOCATABLE :: CELLVOL( : ) ! grid-cell volume [m2*sigma]
+      REAL,    ALLOCATABLE :: CELLHGT( : ) ! grid-cell height [sigma]
+      REAL,    ALLOCATABLE :: CELLVOL( : ) ! grid-cell volume [m2*sigma]
  
 C Emission rate of all aerosol species interpolated to current time
       INTEGER, ALLOCATABLE :: MAP_EMtoAERO( : )   
@@ -186,8 +186,7 @@ C-----------------------------------------------------------------------
          USE UTILIO_DEFN, ONLY: INDEX1, M3EXIT, LATGRD3, XSTAT1, XSTAT2
          USE VDIFF_MAP, ONLY : N_SPC_DIFF, DIFF_SPC
      
-	use HDMod 
-	implicit TYPE(hyperdual)(a-h, o-z) 
+		 USE HDMod 
          INCLUDE SUBST_CONST     ! physical and mathematical constants
          INCLUDE SUBST_FILES_ID  ! file name parameters
 
@@ -206,8 +205,8 @@ C Local Variables:
          TYPE(hyperdual)  DGV, SG, SPLIT_ACCUM
 
 C Variables for calculating the volume of each grid cell
-         TYPE(hyperdual)  DX1, DX2                            ! grid-cell width and length [m]
-         TYPE(hyperdual)  CELLAREA                            ! grid-cell area [m2]
+         REAL  DX1, DX2                            ! grid-cell width and length [m]
+         REAL  CELLAREA                            ! grid-cell area [m2]
 
 C Domain decomposition info from emission and meteorology files
          INTEGER GXOFF, GYOFF          ! origin offset
@@ -250,15 +249,15 @@ C *** Set up emissions size distribution arrays
       ! Binkowski & Roselle (2003)
          DO IEM = 1,N_EM_AERO_REF
            DO N = 1, N_MODE
-              DGV = EM_AERO_REF( IEM )%DGVEM( N )
-              SG  = EM_AERO_REF( IEM )%SGEM ( N )
+              DGV = REAL( EM_AERO_REF( IEM )%DGVEM( N ) , 8 )
+              SG  = REAL( EM_AERO_REF( IEM )%SGEM ( N ) , 8 )
 
               IF ( EM_AERO_REF( IEM )%SPLIT( N ) .GT. 0.0 ) THEN
                 FACNUM( IEM,N ) = EXP( 4.5 * LOG( SG ) ** 2 ) / DGV ** 3
                 FACSRF( IEM,N ) = PI * EXP( 0.5 * LOG( SG ) ** 2 ) / DGV
               ELSE
-                FACNUM( IEM,N ) = 0.0
-                FACSRF( IEM,N ) = 0.0
+                FACNUM( IEM,N ) = 0.0D0
+                FACSRF( IEM,N ) = 0.0D0
               END IF
            END DO
 
@@ -282,13 +281,13 @@ C *** Set up emissions size distribution arrays
        ! these scale factors as a function of transported species and
        ! mode. 
        ALLOCATE( SD_SPLIT( N_SPC_DIFF, N_EM_AERO_REF ) )
-       SD_SPLIT = 0.0
+       SD_SPLIT = 0.0D0
        DO IEM = 1,N_EM_AERO_REF
          ! For the Fine Mode Reference Distribution, lump Aitken
          ! with Accumulation mode if Aitken Mode does not exist
          IF ( EM_AERO_REF( IEM )%NAME .EQ. 'FINE_REF' ) THEN
             DO ISPC = 1,N_AEROSPC
-              SPLIT_ACCUM = 0.0
+              SPLIT_ACCUM = 0.0D0
               DO N = 1,N_MODE-1
                 IF ( AERO_MISSING( ISPC,N ) ) THEN
                   SPLIT_ACCUM = SPLIT_ACCUM + EM_AERO_REF( IEM )%SPLIT( N )
@@ -296,7 +295,7 @@ C *** Set up emissions size distribution arrays
                   SD_SPLIT( MAP_AEROtoDIFF( ISPC,N ),IEM ) = 
      &               SD_SPLIT( MAP_AEROtoDIFF( ISPC,N ),IEM ) +
      &               EM_AERO_REF( IEM )%SPLIT( N ) + SPLIT_ACCUM
-                  SPLIT_ACCUM = 0.0
+                  SPLIT_ACCUM = 0.0D0
                 END IF
               END DO
             END DO
@@ -307,7 +306,7 @@ C *** Set up emissions size distribution arrays
               DO N = 1, N_MODE
                 IF ( .NOT. AERO_MISSING( ISPC,N ) ) THEN
                   SD_SPLIT( MAP_AEROtoDIFF( ISPC,N ),IEM ) = 
-     &               EM_AERO_REF( IEM )%SPLIT( N ) 
+     &               REAL( EM_AERO_REF( IEM )%SPLIT( N ) , 8 ) 
                 END IF
               END DO
             END DO
@@ -524,8 +523,7 @@ C ----------------------------------------------------------------------
          USE GRID_CONF, ONLY: NCOLS, NROWS
          USE SSEMIS, ONLY: SEA_FACTNUM, SEA_FACTSRF
 
-	use HDMod 
-	implicit TYPE(hyperdual)(a-h, o-z) 
+		 use HDMod 
          INTEGER, INTENT( IN ) :: ISRM, NL
          TYPE(hyperdual), INTENT( INOUT ) :: VDEMIS ( :,:,:,: ) 
 
@@ -552,7 +550,7 @@ C *** Initialize Variables
 
          N_SD   = EM_STREAM_SIZE( ISRM )%LEN 
          ALLOCATE( EMISM3( EMLAYS,NCOLS,NROWS,N_MODE,N_SD ) )
-         EMISM3 = 0.0
+         EMISM3 = 0.0D0
          !NL = EMLAYS
 
 C *** Calculate scaling factor for converting mass emissions into [ug/m3/s]

@@ -83,9 +83,9 @@ C-----------------------------------------------------------------------
          Character( 16 ) :: name        ! Organic Aerosol Species Name
          Character( 16 ) :: gas_name    ! Condensable Vapor Species Name
          Character( 16 ) :: ctr_name    ! Reaction Counter Name
-         Real( 8 )       :: alpha       ! Mass-based stoichiometric coefficients [ug/m^3]/[ug/m^3]
-         Real( 8 )       :: cstar       ! Effective saturation concentrations [ug/m^3] at 298 K
-         Real( 8 )       :: enth        ! Enthalphy of Vaporization [J/mol]
+         Real            :: alpha       ! Mass-based stoichiometric coefficients [ug/m^3]/[ug/m^3]
+         Real            :: cstar       ! Effective saturation concentrations [ug/m^3] at 298 K
+         Real            :: enth        ! Enthalphy of Vaporization [J/mol]
          Logical         :: nonvol      ! Flag identifying nonvolatile species
       End Type oa_type
 
@@ -185,9 +185,9 @@ C-----------------------------------------------------------------------
       ! Variables for saving properties and concentrations of organic
       ! compounds
       !   Molecular Weights
-          Real( 8 ), Allocatable    :: op_mw    ( : )   ! PM species
-          Real( 8 ), Allocatable    :: og_mw    ( : )   ! Vapor Species
-          Real( 8 ), Allocatable    :: rog_mw   ( : )   ! Precursor Species
+          Real, Allocatable    :: op_mw    ( : )   ! PM species
+          Real, Allocatable    :: og_mw    ( : )   ! Vapor Species
+          Real, Allocatable    :: rog_mw   ( : )   ! Precursor Species
                                                    ! that are linked to yields
       !   Concentrations
           TYPE(hyperdual), Allocatable    :: og_conc  ( : )   ! Vapors ! This should be hyperdual 
@@ -244,8 +244,8 @@ C-----------------------------------------------------------------------
 
       ! Local Variables:
       Character( 300 ):: xmsg
-      Real( 8 )       :: gasconv    
-      Real( 8 )       :: vtmp       
+      Real            :: gasconv
+      Real            :: vtmp
       Integer         :: n, a, g
       Integer         :: spc
       Integer         :: map_OAtoOAlist( 200 )
@@ -296,7 +296,7 @@ C-----------------------------------------------------------------------
           ! GC Namelist. When a match is found, populate the properties
           ! of that counter species.
           map_ROGtoCGRID = 0
-          ROG_mw = 200.0d0 
+          ROG_mw = 200.0d0
           Do spc = 1, n_oa
             If( oaspc( spc )%ctr_name == '' ) Cycle
             g = index1( oaspc( spc )%ctr_name, n_gc_spc, gc_spc )
@@ -367,12 +367,12 @@ C-----------------------------------------------------------------------
          n = map_OGtoCGRID( spc )
          If ( n .Ne. 0 ) Then
             vtmp = gasconv * og_mw( spc )
-            og_conc( spc ) = Max( conc( n ) * vtmp, hdual_cast( min_gasconc )) 
+            og_conc( spc ) = Max( conc( n ) * vtmp, real(min_gasconc, 8 )) 
          End If
          
          n = map_ROGtoCGRID( spc )
          If ( n .Ne. 0 ) Then
-            rog_dconc( spc ) = Max( conc( n ), hdual_cast( min_gasconc ))
+            rog_dconc( spc ) = Max( conc( n ), real(min_gasconc, 8 ))
          End If
       End Do
 
@@ -412,8 +412,8 @@ C-----------------------------------------------------------------------
 
       ! Local Variables:
       Character( 80 ) :: xmsg
-      Real( 8 )       :: gasconv
-      Real( 8 )       :: vtmp
+      Real            :: gasconv
+      Real            :: vtmp
       Integer         :: n
       Integer         :: spc
 
@@ -771,8 +771,8 @@ C Key Subroutines/Functions called:  newt, soabisection
       Implicit None
 
       ! Arguments:
-      Real( 8 )    :: dt            ! Synchronization time step [ s ]
-      Integer      :: layer         ! model layer number
+      Real    :: dt            ! Synchronization time step [ s ]
+      Integer :: layer         ! model layer number
 
 
       ! Local variables:
@@ -780,9 +780,9 @@ C Key Subroutines/Functions called:  newt, soabisection
       Character( 300 ) :: xmsg
       Integer       :: i, im, indx, ispc, n, nsvol
 
-      Real( 8 ), Allocatable, Save ::  mw_inv( : )     ! Inverse MW of SVOCs [ mol/g ]
+      Real, Allocatable, Save ::  mw_inv( : )     ! Inverse MW of SVOCs [ mol/g ]
 
-      Real( 8 ), Allocatable, Save ::  rog_ppm2ug( : ) ! [ ppm per ug/m3 ] for ORGPROD at
+      Real, Allocatable, Save ::  rog_ppm2ug( : ) ! [ ppm per ug/m3 ] for ORGPROD at
                                         ! reference temperature and pressure
 
       ! Parameters & variables for adjusting cstar to ambient conditions
@@ -861,11 +861,11 @@ C Key Subroutines/Functions called:  newt, soabisection
                             ! and is consistent with IMPROVE visibility methods
 
       ! Variables for updating 2nd and 3rd moments
-      TYPE(hyperdual) :: m0_init( 2 )  ! initial 0 moment, wet [ mom/m3 ]
+      TYPE(hyperdual) m0_init( 2 )  ! initial 0 moment, wet [ mom/m3 ]
       TYPE(hyperdual) m1wet_init( 2 )  ! initial 1st moment, wet [ mom/m3 ]
       TYPE(hyperdual) m2wet_initD( 2 )  ! initial 2nd moment, wet [ mom/m3 ]
-      TYPE(hyperdual) :: m3wet_init( 2 )  ! initial 3rd moment, wet [ mom/m3 ]
-      TYPE(hyperdual) :: m2wet_init( 2 )  ! initial 2nd moment, wet [ mom/m3 ]
+      TYPE(hyperdual) m3wet_init( 2 )  ! initial 3rd moment, wet [ mom/m3 ]
+      TYPE(hyperdual) m2wet_init( 2 )  ! initial 2nd moment, wet [ mom/m3 ]
       TYPE(hyperdual) m3wet_final( 2 )  ! final 3rd moment with updated SOA [ mom/m3 ]
       TYPE(hyperdual) m2wet_final( 2 )  ! final 2nd moment with updated SOA [ mom/m3 ]
 
@@ -950,7 +950,6 @@ C-----------------------------------------------------------------------
       ! gas tracer species to the array that will be multiplied by alpha
       ! to give newly formed semivolatile vapors.
       totrog( : ) = rog_dconc( : ) * rog_ppm2ug( : ) * convfac
-      
 
       ! Transfer non-volatile products directly to aerospc_conc array (2nd mode)
       Do i = 1, n_oa
@@ -980,7 +979,6 @@ C-----------------------------------------------------------------------
       nsvol    = 0
       totorgnv = sum( sum( aerospc_conc( :,1:2 ),2 ) / aerospc_mw( : ), 
      &                     mask=lnonvol_oa( : ) )  
-
       totorg   = sum( sum( aerospc_conc( :,1:2 ),2 ) * aerospc_mwinv( : ), 
      &                     mask=aerospc(:)%om )  
 
@@ -1019,7 +1017,7 @@ C-----------------------------------------------------------------------
       End Do
 
       ! Check If gas/particle equilibrium can be established
-      If ( ( threshold .Gt. 1.0d0 ) .Or. ( totorgnv .Gt. threshmin ) ) Then
+      If ( ( threshold .Gt. 1.0 ) .Or. ( totorgnv .Gt. threshmin ) ) Then
 
         ! Perform one of two methods for partitioning
         If ( newtpartition ) Then
@@ -1036,7 +1034,7 @@ C-----------------------------------------------------------------------
           If ( check ) Then
              ! Try again with initial guess of 50/50 gas/aerosol split.
              Do i = 1, nsvol
-                caer( i ) = 0.5d0 * ctotf( i )
+                caer( i ) = 0.5 * ctotf( i )
              End Do
              Call newt( layer, caer, nsvol, check,
      &                  ctotf, c0, svmw_inv, totorgnv )
@@ -1058,9 +1056,9 @@ C-----------------------------------------------------------------------
           upb       = lowb + upb ! upper: all moles (semi and nonvolatile)
           If ( abs( upb - lowb ) .Lt. threshmin ) Then
             ! no SOA to partition
-            orgmoles = ( lowb + upb ) / 2.0d0
+            orgmoles = ( lowb + upb ) / 2.0
           Else
-            upb       = upb * ( 2.0d0 + 1.0d-7 * Real(n_oa, 8) ) ! prevent numerical issues
+            upb       = upb * ( 2.0 + 1.0e-7 * real(n_oa) ) ! prevent numerical issues
             orgmoles = soabisect( lowb, upb, totorgnv, nsvol, c0, ctotf, svmw )
           End If
 
@@ -1081,17 +1079,17 @@ C-----------------------------------------------------------------------
 
            ! Check that the mass of aerosol left has not gone below a
            ! minimum value
-           If ( caer( nsvol ) .Lt. tiny(0.0d0) ) Then
+           If ( caer( nsvol ) .Lt. tiny(0.0) ) Then
               Write( logdev,* ) 'caer less than zero for OA species: ', 
      &                              oaspc( i )%name, ' ', caer( nsvol ),
      &                              ' reset to evapmin.'
-              ctotf( nsvol ) = ctotf( nsvol ) - caer( nsvol ) + evapminD 
-              caer( nsvol ) = hdual_cast(evapminD)
+              ctotf( nsvol ) = ctotf( nsvol ) - caer( nsvol ) + evapmin
+              caer( nsvol ) = evapminD
            End If
 
            ! Check that the mass of aerosol condensed does not exceed
            ! the total
-           If ( caer( nsvol ) - ctotf( nsvol ) .Gt. tiny(0.0d0) ) Then
+           If ( caer( nsvol ) - ctotf( nsvol ) .Gt. tiny(0.0) ) Then
                Write( logdev,* ) 'caer exceeds ctotf at i = ', i
                Write( logdev,* ) 'caer: ', caer( nsvol ), ' ctotf: ', ctotf( nsvol )
                Write( logdev,* ) 'caer reset to ctotf'
@@ -1111,7 +1109,7 @@ C-----------------------------------------------------------------------
            ! Transfer the semivolatile mass
            Do im = 1,2
               If ( aero_missing( indx,im ) ) Cycle
-              If ( dcaer .lt. 0.0d0 ) Then
+              If ( dcaer .lt. 0.0 ) Then
                  ! Evaporate using mode-dependent mass fraction
                  Phi = aerospc_conc( indx,im ) / totaer
                  aerospc_conc( indx,im ) = 
@@ -1175,21 +1173,21 @@ C-----------------------------------------------------------------------
          ! must be done separately because PNCOM has infinite OM:OC
          poa = aerospc_conc( apoc_idx, im ) + aerospc_conc( apncom_idx, im )
          kappaVorg = kappaVorg + 
-     &               (0.11d0*poa / ( aerospc_conc(apoc_idx, im ) + tiny(0.0d0) ) -0.10d0)
+     &               (0.11*poa / ( aerospc_conc(apoc_idx, im ) + tiny(0.0) ) -0.10)
      &               * (aerospc_conc( apncom_idx, im ) / aerospc( apncom_idx )%density +
-     &                  aerospc_conc( apoc_idx,   im ) / aerospc( apoc_idx )%density )*1.0d-9
+     &                  aerospc_conc( apoc_idx,   im ) / aerospc( apoc_idx )%density )*1.0e-9
 
          ! Calculate Aggregate Kappa and volume Equivalent Diameter
          overallkappa = kappaVorg/totvol
          numparticles = moment0_conc( im )
-         diam         = (6.0d0*totvol/numparticles/ dpi ) ** (1.0d0/3.0d0)
+         diam         = (6.0*totvol/numparticles/ dpi ) ** (1.0d0/3.0d0)
 
          ! Compute aerosol water (Eq 3 of Petters and Kreidenweis)
          relhumid = min( airRH, 0.95 ) ! Cap RH at 95% to be conservative regarding uptake
          aw = activityw( relhumid, airtemp, diam ) ! activity of water
-         If( overallkappa .gt. 1d-6 ) then ! prevents situation of little uptake
+         If( overallkappa .gt. 1e-6 ) then ! prevents situation of little uptake
             aerospc_conc( aorgh2o_idx, im ) = aerospc( aorgh2o_idx )%density
-     &       * aw/(1.0d0-aw) * kappaVorg * 1.0d9
+     &       * aw/(1.0-aw) * kappaVorg * 1.0d9
          Else
             aerospc_conc( aorgh2o_idx, im ) =  conminD ! no significant orgwater
          End If
@@ -1205,9 +1203,9 @@ C-----------------------------------------------------------------------
       Call calcmoments( .true. )
       m3wet_final( : ) = moment3_conc( 1:2 )
       m2wet_final( 1 ) = m2wet_init( 1 ) * ( m3wet_final( 1 ) /
-     &                     m3wet_init( 1 ) ) ** ( 2.0d0 / 3.0d0 )
+     &                     m3wet_init( 1 ) ) ** ( 2.0 / 3.0 )
       m2wet_final( 2 ) = m2wet_init( 2 ) * ( m3wet_final( 2 ) / 
-     &                     m3wet_init( 2 ) ) ** ( 2.0d0 / 3.0d0 )
+     &                     m3wet_init( 2 ) ) ** ( 2.0 / 3.0 )
       moment2_conc( 1:2 )  = m2wet_final( : )
 
       ! Update Budget Variables
@@ -1277,7 +1275,7 @@ C      Res., Vol 106, No D22, 28275-28293, 2001.
       IMPLICIT NONE
 
 C  Arguments
-                         ! QQQ 
+
       INTEGER LAYER      ! model layer
       INTEGER N          ! dimension of problem
       TYPE(hyperdual) X( N )        ! initial guess of CAER
@@ -1296,11 +1294,11 @@ C  Following Numerical recipes
 
 C  Parameters
       INTEGER, PARAMETER :: MAXITS = 100  ! maximum number of iterations
-      REAL( 8 ), PARAMETER :: TOLF = 1.0D-09   ! convergence criterion on fxn values
-      REAL( 8 ), PARAMETER :: TOLMIN = 1.0d-12 ! criterion whether spurious conver-
+      REAL, PARAMETER :: TOLF = 1.0E-09   ! convergence criterion on fxn values
+      REAL, PARAMETER :: TOLMIN = 1.0E-12 ! criterion whether spurious conver-
                                           ! gence to a minimum has occurred
-      REAL( 8 ), PARAMETER :: TOLX = 1.0D-10   ! convergence criterion on delta_x
-      REAL( 8 ), PARAMETER :: STPMX = 100.0    ! scaled maximum step length allowed
+      REAL, PARAMETER :: TOLX = 1.0E-10   ! convergence criterion on delta_x
+      REAL, PARAMETER :: STPMX = 100.0    ! scaled maximum step length allowed
 
 C  Local variables
       TYPE(hyperdual) :: CT( N ), CS( N ), IMW( N ), M
@@ -1604,7 +1602,7 @@ C       subroutine).
       IMPLICIT NONE
 
       INTEGER N
-      REAL( 8 ) TOLX
+      REAL    TOLX
       LOGICAL CHECK
       TYPE(hyperdual) F, FOLD, STPMAX
       TYPE(hyperdual) G( N ), P( N ), X( N ), XOLD( N )

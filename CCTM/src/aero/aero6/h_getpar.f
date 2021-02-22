@@ -88,13 +88,13 @@ C Local Variables:
       Real( 8 ), Parameter :: one3d = 1.0D0 / 3.0D0
       Real( 8 ), Parameter :: two3d = 2.0D0 / 3.0D0
 
-      Real( 8 ),      Parameter :: densmin = 1.0D03  ! minimum particle density [ kg/m**3 ]
+      Real,      Parameter :: densmin = 1.0E03  ! minimum particle density [ kg/m**3 ]
 
-      TYPE(hyperdual), Save :: minl2sg( n_mode )   ! min value of ln(sg)**2 for each mode
-      TYPE(hyperdual), Save :: maxl2sg( n_mode )   ! max value of ln(sg)**2 for each mode
+      Real( 8 ), Save :: minl2sg( n_mode )   ! min value of ln(sg)**2 for each mode
+      Real( 8 ), Save :: maxl2sg( n_mode )   ! max value of ln(sg)**2 for each mode
 
       Real( 8 )       :: factor
-      TYPE(hyperdual)       :: species_mass
+      TYPE(hyperdual) :: species_mass
       TYPE(hyperdual) :: sumM3
       TYPE(hyperdual) :: sumMass
       Integer         :: n, spc   ! loop counters
@@ -125,7 +125,7 @@ C *** Calculate aerosol 3rd moment concentrations [ m**3 / m**3 ]
      &         ( aerospc( spc )%no_M2Wet .AND. .Not. wet_moments_flag ) ) Cycle
 
             factor       = Real( 1.0D-9 * f6dpi / aerospc( spc )%density, 8) 
-            species_mass =  aerospc_conc( spc,n )
+            species_mass = aerospc_conc( spc,n )
             sumM3        = sumM3   + factor * species_mass
             sumMass      = sumMass + species_mass
          End Do
@@ -176,7 +176,7 @@ c         below the minimum limit.
          aeromode_lnsg( n ) =  Sqrt( l2sg ) 
 
          ES36 =  Exp( 4.5d0 * l2sg )
-         aeromode_diam( n ) = Max( min_diam_g( n ), ( moment3_conc( n )
+         aeromode_diam( n ) = Max( REAL(min_diam_g( n ), 8 ), ( moment3_conc( n )
      &                      / ( moment0_conc( n ) * es36 ) ) ** one3d )
 
       End Do

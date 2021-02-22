@@ -47,6 +47,7 @@ C H. Pye 09/2014: added alkane and PAH SOA precursor
 C D.Wong  02/01/19 added one more variable in the USE clause
 C-----------------------------------------------------------------------
 
+      use HDMod
       Implicit None
 
       Integer, Parameter :: n_precursor = 24   ! # of precursors
@@ -111,12 +112,12 @@ C Indices of required species
       Integer :: OH_idx
       Integer :: PHGRXN_idx
 
-      Real( 8 ) :: precursor_mw( n_precursor )   ! mol wt from cgrid_spcs [g/mol]
+      Real( 8 ) :: precursor_mw( n_precursor )         ! mol wt from cgrid_spcs [g/mol]
 
-      Real( 8 ) :: precursor_conc( n_precursor ) ! precursor concentration [ug/m^3]
+      TYPE(hyperdual) :: precursor_conc( n_precursor ) ! precursor concentration [ug/m^3]
 
-      Real( 8 ) :: so4rate                       ! sulfate gas-phase production rate [ug/m^3*s]
-      Real( 8 ) :: phg_rate                      ! particulate mercury gas-phase production rate [ug/m^3*s]
+      TYPE(hyperdual) :: so4rate                       ! sulfate gas-phase production rate [ug/m^3*s]
+      TYPE(hyperdual) :: phg_rate                      ! particulate mercury gas-phase production rate [ug/m^3*s]
 
 C Private variables for loading and unloading to CGRID array
       Integer          :: precursor_map( n_precursor )  ! pointers to CGRID
@@ -166,12 +167,12 @@ C Build mapping to CGRID for each precursor species
       Do spc = 1, n_precursor
          n = index1( precursor( spc )%name, n_gc_g2ae, gc_g2ae )
          If ( n .Ne. 0 ) Then
-            precursor_mw( spc ) = Real( gc_molwt( gc_g2ae_map( n ) ), 8 )
+            precursor_mw( spc ) = real( gc_molwt( gc_g2ae_map( n ) ), 8 )
             precursor_map( spc ) = gc_strt - 1 + gc_g2ae_map( n )
          Else
             n = index1( precursor( spc )%name, n_nr_n2ae, nr_n2ae )
             If ( n .Ne. 0 ) Then
-               precursor_mw( spc ) = Real( nr_molwt( nr_n2ae_map( n ) ), 8 )
+               precursor_mw( spc ) = real( nr_molwt( nr_n2ae_map( n ) ), 8 )
                precursor_map( spc ) = nr_strt - 1 + nr_n2ae_map( n )
             Else
                 If ( precursor( spc )%required ) Then
@@ -259,10 +260,11 @@ C HS  03/10/11 Changed vtmp and gasconv to real(8)
 C-----------------------------------------------------------------------
 
       Use aeromet_data, only: airdens, inv_mwair, min_gasconc
+
       Implicit None
 
 C Arguments:
-      Real( 8 ), Intent( In ) :: conc( : )
+      TYPE(hyperdual), Intent( In ) :: conc( : )
 
 C Local Variables:
       Real( 8 )       :: gasconv       ! converts from [ppm] to [ug/m^3], no change
@@ -273,7 +275,7 @@ C Local Variables:
       Call map_precursor()
 
 C Compute gas conversion constant
-      gasconv = Real(airdens * inv_mwair, 8 ) 
+      gasconv = Real( airdens * inv_mwair, 8 )
 
 C Copy grid cell concentrations of precursor species
       precursor_conc = 0.0d0
@@ -311,7 +313,7 @@ C-----------------------------------------------------------------------
       Implicit None
 
 C arguments:
-      Real( 8 ), Intent( Out ) :: conc( : )
+      TYPE(hyperdual), Intent( Out ) :: conc( : )
 
 C local variables:
       Character( 80 ) :: xmsg
@@ -326,7 +328,7 @@ C local variables:
       End If
 
 C compute gas conversion constant
-      gasconv = REAL( airdens * inv_mwair, 8 )
+      gasconv = Real( airdens * inv_mwair, 8 )
 
 C copy precursor_conc back to grid cell concentrations
       Do spc = 1, n_precursor
@@ -341,7 +343,6 @@ C copy precursor_conc back to grid cell concentrations
           
                   ! Convert Budget Process Numbers from ug m-3 to ppmv
                   ! for application to process analysis and ISAM
-                  ! COND_BUDGET is already hyperdual, vtmp shouldn't matter
                   COND_BUDGET( n )   = COND_BUDGET( n )   / vtmp
                   COAG_BUDGET( n,: ) = COAG_BUDGET( n,: ) / vtmp
                   NPF_BUDGET( n )    = NPF_BUDGET( n )    / vtmp
@@ -366,7 +367,6 @@ C
 C SR  03/25/11 Replaced I/O API include files with UTILIO_DEFN
 C-----------------------------------------------------------------------
 
-	use HDMod 
       Implicit None
 
 C Arguments:

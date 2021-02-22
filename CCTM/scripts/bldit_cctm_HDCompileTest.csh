@@ -116,9 +116,9 @@ set make_options = "-j"                #> additional options for make command if
  set ModDiag   = diag                       #> CCTM diagnostic modules
  set Tracer    = trac0                      #> tracer configuration directory under 
                                             #>   $CMAQ_MODEL/CCTM/src/MECHS [ default: no tracer species ]
- set ModPa     = procan/pa                  #> CCTM process analysis
+# set ModPa     = procan/pa                  #> CCTM process analysis
  set ModPvO3   = pv_o3                      #> potential vorticity from the free troposphere
- set ModISAM   = isam                       #> CCTM Integrated Source Apportionment Method
+# set ModISAM   = isam                       #> CCTM Integrated Source Apportionment Method
  set ModDDM3D  = ddm3d                      #> Decoupled Direct Method in 3D
 
 #============================================================================================
@@ -553,15 +553,15 @@ set Cfile = ${Bld}/${CFG}.bld      # Config Filename
  echo "Module ${ModCloud};"                                        >> $Cfile
  echo                                                              >> $Cfile
 
- set text = "// compile for inline process analysis"
- echo $text                                                        >> $Cfile
- echo "Module ${ModPa};"                                           >> $Cfile
- echo                                                              >> $Cfile
+ # set text = "// compile for inline process analysis"
+#  echo $text                                                        >> $Cfile
+#  echo "Module ${ModPa};"                                           >> $Cfile
+#  echo                                                              >> $Cfile
 
- set text = "// compile for integrated source apportionment method"
- echo $text                                                        >> $Cfile
- echo "Module ${ModISAM};"                                         >> $Cfile
- echo                                                              >> $Cfile
+#  set text = "// compile for integrated source apportionment method"
+#  echo $text                                                        >> $Cfile
+#  echo "Module ${ModISAM};"                                         >> $Cfile
+#  echo                                                              >> $Cfile
 
  if ( $?DDM3D_CCTM ) then
    set text = "// compile for decoupled direct method in 3d"

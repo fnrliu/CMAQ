@@ -216,33 +216,33 @@ C-----------------------------------------------------------------------
 #endif
 
 
-	use HDMod 
+	  use HDMod 
       IMPLICIT NONE
 
 C *** arguments:
-      REAL( 8 ),    INTENT( IN ) :: DT          ! synchronization time step, sec
+      REAL,    INTENT( IN ) :: DT          ! synchronization time step, sec
       INTEGER, INTENT( IN ) :: COL         ! Column of cell
       INTEGER, INTENT( IN ) :: ROW         ! Row of cell
       INTEGER, INTENT( IN ) :: LAYER       ! Layer of cell
 
 C *** Parameters
-      REAL( 8 ), PARAMETER :: DIFFSULF = 9.36D-06  ! molecular diffusiviity for sulfuric acid
-      REAL( 8 ), PARAMETER :: SQRT2 = 1.4142135623731d0
-      REAL( 8 ), PARAMETER :: T0 = 288.15d0   ! [ K ]
-      REAL( 8 ), PARAMETER :: TWOTHIRDS   =  2.0d0 / 3.0d0
-      REAL( 8 ), PARAMETER :: ONE_OVER_TICE =  1.0d0 / 273.16d0
+      REAL, PARAMETER :: DIFFSULF = 9.36E-06  ! molecular diffusiviity for sulfuric acid
+      REAL, PARAMETER :: SQRT2 = 1.4142135623731
+      REAL, PARAMETER :: T0 = 288.15   ! [ K ]
+      REAL, PARAMETER :: TWOTHIRDS   =  2.0 / 3.0
+      REAL, PARAMETER :: ONE_OVER_TICE =  1.0 / 273.16
 
 C *** local variables
-      TYPE(hyperdual)         DIFFCORR   ! Correction to DIFFSULF & DIFFORG for pressure
-      TYPE(hyperdual)         DV_SO4     ! molecular diffusivity of H2SO4 vapor after correction for ambient conditions
-      TYPE(hyperdual)         SQRT_TEMP  ! square root of ambient temperature
-      TYPE(hyperdual)         XLM        ! atmospheric mean free path [m]
-      TYPE(hyperdual)         AMU        ! atmospheric dynamic viscosity [kg/m s]
+      REAL         DIFFCORR   ! Correction to DIFFSULF & DIFFORG for pressure
+      REAL         DV_SO4     ! molecular diffusivity of H2SO4 vapor after correction for ambient conditions
+      REAL         SQRT_TEMP  ! square root of ambient temperature
+      REAL         XLM        ! atmospheric mean free path [m]
+      REAL         AMU        ! atmospheric dynamic viscosity [kg/m s]
 
       TYPE(hyperdual) :: CGR( N_MODE-1 ) ! Aitken & Accum. modes
 
-      TYPE(hyperdual) :: LAMDA      ! mean free path [ m ]
-      TYPE(hyperdual) :: KNC        ! KNC = TWO3 * BOLTZMANN *  AIRTEMP / AMU
+      REAL            :: LAMDA      ! mean free path [ m ]
+      REAL            :: KNC        ! KNC = TWO3 * BOLTZMANN *  AIRTEMP / AMU
 
 C *** Free Molecular regime (depends upon modal density)
       TYPE(hyperdual) :: KFMAT      ! = SQRT( 3.0*BOLTZMANN * AIRTEMP / PDENSAT )
@@ -282,10 +282,11 @@ C *** Variables for mode merging
       TYPE(hyperdual)         GETAF
       TYPE(hyperdual)         AAA, XNUM, XM2, XM3,XXM2, XXM3
       TYPE(hyperdual)         FNUM, FM2, FM3, PHNUM, PHM2, PHM3
-      TYPE(hyperdual)         ERF, ERFC    ! Error and complementary error function
+      REAL                    ERF, ERFC    ! Error and complementary error function
 
 C *** local variables
       INTEGER      SPC        ! loop counter
+      INTEGER      MODE       ! loop counter_el
       INTEGER      N          ! loop counter
 
       logical, save :: firstime = .true.
@@ -305,17 +306,17 @@ C *** Calculate mean free path [ m ]:
 C     6.6328E-8 is the sea level value given in Table I.2.8
 C     on page 10 of U.S. Standard Atmosphere 1962
 
-      XLM = 6.6328D-8 * STDATMPA * AIRTEMP  / ( T0 * AIRPRES )
+      XLM = 6.6328E-8 * STDATMPA * AIRTEMP  / ( T0 * AIRPRES )
 
 C *** Calculate dynamic viscosity [ kg m**-1 s**-1 ]:
 C     U.S. Standard Atmosphere 1962 page 14 expression
 C     for dynamic viscosity is:
 C     dynamic viscosity =  beta * T * sqrt(T) / ( T + S)
 C     where beta = 1.458e-6 [ kg sec^-1 K**-0.5 ], s = 110.4 [ K ].
-      AMU = 1.458D-6 * AIRTEMP * SQRT_TEMP / ( AIRTEMP + 110.4d0 )
+      AMU = 1.458E-6 * AIRTEMP * SQRT_TEMP / ( AIRTEMP + 110.4 )
 
 C *** Set minimums for coarse mode
-      MOMENT0_CONC( N_MODE ) = MAX( AEROMODE_MINNUM( N_MODE ),
+      MOMENT0_CONC( N_MODE ) = MAX( REAL(AEROMODE_MINNUM( N_MODE ), 8) ,
      &                              MOMENT0_CONC( N_MODE ) )
 
 C *** Secondary Organics
@@ -333,7 +334,7 @@ C     production and a fully dynamic treatment of inorganic gas-to-
 C     particle mass transfer.
 
 C *** Compute H2SO4 diffusivity, correct for temperature and pressure
-      DIFFCORR = ( STDATMPA / AIRPRES ) * ( ONE_OVER_TICE * AIRTEMP ) ** 1.75d0
+      DIFFCORR = ( STDATMPA / AIRPRES ) * ( ONE_OVER_TICE * AIRTEMP ) ** 1.75
       DV_SO4 = DIFFSULF * DIFFCORR
 
 C *** Update size parameters (distribution is wet from ORGAER)
@@ -362,9 +363,9 @@ C *** Update size parameters (distribution is wet from ORGAER)
       KNC      = TWOTHIRDS * BOLTZMANN *  AIRTEMP / AMU
 
 ! *** calculate terms used in Equation A5 of Binkowski & Shankar (1995)
-      KFMAT    = SQRT( 3.0d0 * BOLTZMANN * AIRTEMP / AEROMODE_DENS( 1 ) )
-      KFMAC    = SQRT( 3.0d0 * BOLTZMANN * AIRTEMP / AEROMODE_DENS( 2 ) )
-      KFMATAC  = SQRT( 6.0d0 * BOLTZMANN * AIRTEMP
+      KFMAT    = SQRT( 3.0 * BOLTZMANN * AIRTEMP / AEROMODE_DENS( 1 ) )
+      KFMAC    = SQRT( 3.0 * BOLTZMANN * AIRTEMP / AEROMODE_DENS( 2 ) )
+      KFMATAC  = SQRT( 6.0 * BOLTZMANN * AIRTEMP
      &         / ( AEROMODE_DENS( 1 ) + AEROMODE_DENS( 2 ) ) )
 
 ! *** transfer of number to accumulation mode from Aitken mode is zero
@@ -453,14 +454,14 @@ C     and condensational growth are accounted for in VOLINORG.
 
 C *** Solve for M2_Aitken based on LOSS during this time step
 C     Note: LOSS is assumed to be non-negative.
-      IF ( LOSS .GT. 0.0d0 ) THEN
+      IF ( LOSS .GT. 0.0 ) THEN
          Y = M20 * EXP( -LOSS * DT )
       ELSE
          Y = M20
       END IF ! test on loss
 
 C *** Transfer new value of M2_Aitken to the array
-      MOMENT2_CONC( 1 ) = MAX( AEROMODE_MINM2( 1 ) , Y  )
+      MOMENT2_CONC( 1 ) = MAX( REAL( AEROMODE_MINM2( 1 ) ), REAL( Y ) )
 
 C *** Accumulation mode: initial value of M2
       M20 = MOMENT2_CONC( 2 )
@@ -475,7 +476,7 @@ C     intramodal coagulation
 
 C *** Solve for M2_accum based on PROD and LOSS during this time step
 C     Note: LOSS is assumed to be non-negative.
-      IF ( LOSS .GT. 0.0D0 ) THEN
+      IF ( LOSS .GT. 0.0 ) THEN
          POL = PROD / LOSS
          Y = POL + ( M20 - POL ) * EXP( -LOSS * DT )
       ELSE
@@ -483,7 +484,7 @@ C     Note: LOSS is assumed to be non-negative.
       END IF ! test on loss
 
 C *** Transfer new value of M2_accum to moment array
-      MOMENT2_CONC( 2 ) = MAX( AEROMODE_MINM2( 2 ) ,  Y  )
+      MOMENT2_CONC( 2 ) = MAX( REAL( AEROMODE_MINM2( 2 ) ), REAL( Y ) )
 
 C *** Coarse mode: no change because coagulation of coarse particles
 C     is neglected in current model version.
@@ -514,7 +515,7 @@ C     Binkowski & Roselle (2003), with the c_i term equal to 0.
       END IF
 
 C *** Transfer new value of M0_Aitken to the moment array
-      MOMENT0_CONC( 1 ) = MAX( AEROMODE_MINNUM( 1 ), Y )
+      MOMENT0_CONC( 1 ) = MAX( REAL(AEROMODE_MINNUM( 1 ), 8), Y )
 
 C *** Accumulation mode: initial value of M0
       Y0 = MOMENT0_CONC( 2 )
@@ -529,7 +530,7 @@ C *** Solve for M0_accum using Smoluchowski`s solution
       Y = Y0 / ( 1.0D0 + A * Y0 * DT )
 
 C *** Transfer new value of M0_accum to the moment array
-      MOMENT0_CONC( 2 ) = MAX( AEROMODE_MINNUM( 2 ), Y  )
+      MOMENT0_CONC( 2 ) = MAX( REAL(AEROMODE_MINNUM( 2 ), 8), Y  )
 
 ! ** Update Budget Variable for Second Moment
       COAG_BUDGET( AERONUM_MAP( 1 ),1 ) = MOMENT0_CONC( 1 ) - CBUDGET0_NUM( 1 )
@@ -579,9 +580,9 @@ C     intermodal coagulation.
              TMASS = TMASS + PHG_RATE * DT
          END IF
 
-         AEROSPC_CONC( SPC,1 ) = MAX( AEROSPC( SPC )%MIN_CONC( 1 ),
+         AEROSPC_CONC( SPC,1 ) = MAX( REAL(AEROSPC( SPC )%MIN_CONC( 1 ), 8),
      &                                AEROSPC_CONC( SPC,1 ) * EXPDT )
-         AEROSPC_CONC( SPC,2 ) = MAX( AEROSPC( SPC )%MIN_CONC( 2 ),
+         AEROSPC_CONC( SPC,2 ) = MAX( REAL(AEROSPC( SPC )%MIN_CONC( 2 ), 8),
      &                                TMASS - AEROSPC_CONC( SPC,1 ) )
 
 
@@ -637,7 +638,7 @@ C *** Ensure that Xnum is large enough so that no more than half of
 C     the Aitken mode mass is merged into the accumulation mode during
 C     any given time step.  This criterion is described in Paragraph 26
 C     of Binkowski and Roselle (2003).
-         XXM3 = 3.0D0 * AEROMODE_LNSG( 1 ) / SQRT2
+         XXM3 = 3.0 * AEROMODE_LNSG( 1 ) / SQRT2
          XNUM = MAX( AAA, XXM3 )
 
 C *** Factors used in error function calls for M2 and M3 mode merging
@@ -700,14 +701,30 @@ C *** Set minimum value for all concentrations in the CBLK array
       END DO
 
 ! *** Propagate Mode Merging and Minimum value impacts to budget variables
-      GROWTH_BUDGET( AERONUM_MAP(:) ) = MOMENT0_CONC(:) - CBUDGET0_NUM(:)
-      GROWTH_BUDGET( AEROSRF_MAP(:) ) = MOMENT0_CONC(:) - CBUDGET0_NUM(:)
-      DO SPC = 1,N_AEROSPC
-         WHERE( AEROSPC_MAP( SPC,: ) .NE. 0 )
-     &          GROWTH_BUDGET( AEROSPC_MAP(SPC,:) )=
-     &              AEROSPC_CONC(SPC,:) - CBUDGET0_MASS(SPC,:)
-      END DO
-
+	  
+C     GROWTH_BUDGET( AERONUM_MAP(:) ) = MOMENT0_CONC(:) - CBUDGET0_NUM(:)
+C     GROWTH_BUDGET( AEROSRF_MAP(:) ) = MOMENT0_CONC(:) - CBUDGET0_NUM(:)
+C     DO SPC = 1,N_AEROSPC
+C        WHERE( AEROSPC_MAP( SPC,: ) .NE. 0 )
+C    &          GROWTH_BUDGET( AEROSPC_MAP(SPC,:) )=
+C    &              AEROSPC_CONC(SPC,:) - CBUDGET0_MASS(SPC,:)
+C     END DO
+	  
+	  DO MODE = 1, N_MODE
+	  	GROWTH_BUDGET(AERONUM_MAP(MODE)) = MOMENT0_CONC(MODE) - CBUDGET0_NUM(MODE)
+	  	GROWTH_BUDGET(AEROSRF_MAP(MODE)) = MOMENT0_CONC(MODE) - CBUDGET0_NUM(MODE)
+	  ENDDO 
+	  
+	  DO SPC = 1,N_AEROSPC
+	  	DO MODE = 1,N_MODE
+	  	   IF (AEROSPC_MAP(SPC, MODE) .NE. 0) THEN
+	          GROWTH_BUDGET( AEROSPC_MAP(SPC, MODE) ) = AEROSPC_CONC(SPC, MODE) - CBUDGET0_MASS(SPC, MODE)
+	       ENDIF 
+	  	ENDDO
+	  ENDDO 
+	  
+	  
+	  
       RETURN
       END SUBROUTINE AEROPROC
 
@@ -761,7 +778,7 @@ C    aerosols. ATMOSPHERIC CHEMISTRY AND PHYSICS. 7, 4639-4659
       USE AEROMET_DATA
       USE UTILIO_DEFN
 
-	use HDMod 
+	  use HDMod 
       IMPLICIT NONE
 
 C *** Arguments:
@@ -769,7 +786,7 @@ C *** Arguments:
       INTEGER COL             ! grid column index
       INTEGER ROW             ! grid row index
       INTEGER LAYER           ! model layer index
-      TYPE(hyperdual)    DV_SO4          ! molecular diffusivity of H2SO4 vapor 
+      REAL    DV_SO4          ! molecular diffusivity of H2SO4 vapor 
                               ! after correction for ambient conditions
       TYPE(hyperdual) :: CGR( N_MODE-1 ) ! 3rd moment SO4 growth rate [m^3/m^3-s]
 
@@ -791,10 +808,10 @@ C *** Local Variables:
 
 C *** Inputs to subroutine HCOND3
 
-      TYPE(hyperdual), SAVE :: COFCBAR_SO4  ! Temperature-independent coefficients
+      REAL, SAVE :: COFCBAR_SO4  ! Temperature-independent coefficients
                                  ! for caculating molecular vel [m/s]
                                  ! = sqrt((8*Rgas)/(pi*MW)) 
-      TYPE(hyperdual)         CBAR_SO4      ! molecular velocity of H2SO4                      
+      REAL         CBAR_SO4      ! molecular velocity of H2SO4                      
 
       TYPE(hyperdual) :: AM0( N_MODE ) ! zeroth moments
       TYPE(hyperdual) :: AM1( N_MODE ) ! first moments
@@ -822,7 +839,7 @@ C     defined in Equations A17-A18 of [Binkowski & Shankar,1995]
       TYPE(hyperdual) :: TOTAER( NINORG )! Total aerosol component across multiple modes 
 
 C *** Variables for new particle formation:
-      TYPE(hyperdual) XH2SO4            ! steady state H2SO4 concentration
+      TYPE(hyperdual)    XH2SO4            ! steady state H2SO4 concentration
       TYPE(hyperdual) :: DMDT_SO4  ! particle mass production rate [ ug/m**3 s ]
       TYPE(hyperdual) :: DNDT      ! particle number production rate [ # / m**3 s ]
       TYPE(hyperdual) :: DM2DT     ! second moment production rate [ m**2 / m**3 s]
@@ -838,8 +855,8 @@ C *** Size-dependent portion of mass-transfer rate equation
       
 C *** ISORROPIA input variables
       TYPE(hyperdual) :: WI( NINORG - 1 )     ! species array [ mol/m**3 ]
-      TYPE(hyperdual) :: RHI                  ! relative humidity [ fraction ]
-      TYPE(hyperdual) :: TEMPI                ! temperature   [ deg K]
+      TYPE(hyperdual) :: RHI                             ! relative humidity [ fraction ]
+      TYPE(hyperdual) :: TEMPI                           ! temperature   [ deg K]
       TYPE(hyperdual) :: CNTRL( 2 )           ! ISOROPIA control parameters 
 
 C *** ISORROPIA output variables
@@ -865,7 +882,7 @@ C *** Variables for volatile species mass transfer between gas and aerosol and
 C     mass partitioning between the modes 
 C *** Prevent calling isorev
       LOGICAL, SAVE   :: HYBRID = .FALSE. ! mass transfer option flag (mass transfer if .TRUE.)
-      TYPE(hyperdual) :: DELT                 ! time step DT [s]
+      REAL( 8 )       :: DELT                 ! time step DT [s]
       TYPE(hyperdual) :: HPLUS( N_MODE )      ! scratch var for H+ [umol/m**3]
 
       TYPE(hyperdual), SAVE :: H2SO4RATM1     ! Mol. wt. ratio of SO4/H2SO4
@@ -916,6 +933,7 @@ C *** Prevent calling isorev
       TYPE(hyperdual) :: TMP
       INTEGER I, N                        ! loop and array indices
       INTEGER IMODE                       ! mode loop index  
+      INTEGER MODE                        ! mode loop index_el
       INTEGER ISTEP                       ! loop index, mass transfer time step loop
       INTEGER ISP                         ! loop index, species loop
       LOGICAL TrustIso                    ! For negative vap. press., TrustIso = F
@@ -923,35 +941,35 @@ C *** Prevent calling isorev
 C *** Local Saved Variables 
       LOGICAL, SAVE :: FIRSTIME = .TRUE.
       LOGICAL, SAVE :: FIRSTWRITE = .TRUE.
-      TYPE(hyperdual), SAVE :: SO4FAC         !  F6DPIM9 / RHOSO4
-      TYPE(hyperdual), SAVE :: SOILFAC        !  F6DPIM9 / RHOSOIL
-      TYPE(hyperdual), SAVE :: ANTHFAC        !  F6DPIM9 / RHOANTH
-      TYPE(hyperdual), SAVE :: H2SO4RAT       ! Mol. wt ratios H2SO4/SO4
-      TYPE(hyperdual), SAVE :: NH3RAT         ! Mol. wt ratios NH3/NH4
-      TYPE(hyperdual), SAVE :: HNO3RAT        ! Mol. wt ratios HNO3/NO3
-      TYPE(hyperdual), SAVE :: HCLRAT         ! Mol. wt ratios HCL/CL 
-      TYPE(hyperdual), SAVE :: MWH2SO4        ! molecular weight for H2SO4
-      TYPE(hyperdual), SAVE :: FAERH2SO4      ! 1e-6 / mw(h2so4)
+      REAL( 8 ), SAVE :: SO4FAC         !  F6DPIM9 / RHOSO4
+      REAL( 8 ), SAVE :: SOILFAC        !  F6DPIM9 / RHOSOIL
+      REAL( 8 ), SAVE :: ANTHFAC        !  F6DPIM9 / RHOANTH
+      REAL( 8 ), SAVE :: H2SO4RAT       ! Mol. wt ratios H2SO4/SO4
+      REAL( 8 ), SAVE :: NH3RAT         ! Mol. wt ratios NH3/NH4
+      REAL( 8 ), SAVE :: HNO3RAT        ! Mol. wt ratios HNO3/NO3
+      REAL( 8 ), SAVE :: HCLRAT         ! Mol. wt ratios HCL/CL 
+      REAL( 8 ), SAVE :: MWH2SO4        ! molecular weight for H2SO4
+      REAL( 8 ), SAVE :: FAERH2SO4      ! 1e-6 / mw(h2so4)
 
-      TYPE(hyperdual), SAVE :: CFAC_ANA
-      TYPE(hyperdual), SAVE :: CFAC_ASO4
-      TYPE(hyperdual), SAVE :: CFAC_ANH4
-      TYPE(hyperdual), SAVE :: CFAC_ANO3
-      TYPE(hyperdual), SAVE :: CFAC_ACL
-      TYPE(hyperdual), SAVE :: CFAC_ACA
-      TYPE(hyperdual), SAVE :: CFAC_AK
-      TYPE(hyperdual), SAVE :: CFAC_AMG
-      TYPE(hyperdual), SAVE :: CFAC_ASEACAT
-      TYPE(hyperdual), SAVE :: CFAC_GNH3
-      TYPE(hyperdual), SAVE :: CFAC_GHNO3
-      TYPE(hyperdual), SAVE :: CFAC_GHCL
+      REAL( 8 ), SAVE :: CFAC_ANA
+      REAL( 8 ), SAVE :: CFAC_ASO4
+      REAL( 8 ), SAVE :: CFAC_ANH4
+      REAL( 8 ), SAVE :: CFAC_ANO3
+      REAL( 8 ), SAVE :: CFAC_ACL
+      REAL( 8 ), SAVE :: CFAC_ACA
+      REAL( 8 ), SAVE :: CFAC_AK
+      REAL( 8 ), SAVE :: CFAC_AMG
+      REAL( 8 ), SAVE :: CFAC_ASEACAT
+      REAL( 8 ), SAVE :: CFAC_GNH3
+      REAL( 8 ), SAVE :: CFAC_GHNO3
+      REAL( 8 ), SAVE :: CFAC_GHCL
 
-      TYPE(hyperdual), SAVE :: M3FAC_ANA
-      TYPE(hyperdual), SAVE :: M3FAC_ASO4
-      TYPE(hyperdual), SAVE :: M3FAC_ANH4
-      TYPE(hyperdual), SAVE :: M3FAC_ANO3
-      TYPE(hyperdual), SAVE :: M3FAC_ACL
-      TYPE(hyperdual), SAVE :: M3FAC_H2O
+      REAL( 8 ), SAVE :: M3FAC_ANA
+      REAL( 8 ), SAVE :: M3FAC_ASO4
+      REAL( 8 ), SAVE :: M3FAC_ANH4
+      REAL( 8 ), SAVE :: M3FAC_ANO3
+      REAL( 8 ), SAVE :: M3FAC_ACL
+      REAL( 8 ), SAVE :: M3FAC_H2O
 
 
       logical, save :: write1 = .true.
@@ -965,34 +983,34 @@ C-----------------------------------------------------------------------
          write( logdev,* ) 'aero_subs, volinorg: noiso'
 #endif
 
-         CFAC_ANA  = 1.0D-6 /  AEROSPC_MW( ANA_IDX )
-         CFAC_ASO4 = 1.0D-6 /  AEROSPC_MW( ASO4_IDX )
-         CFAC_ANH4 = 1.0D-6 / AEROSPC_MW( ANH4_IDX )
-         CFAC_ANO3 = 1.0D-6 / AEROSPC_MW( ANO3_IDX )
-         CFAC_ACL  = 1.0D-6 / AEROSPC_MW( ACL_IDX )
-         CFAC_ACA  = 1.0D-6 / AEROSPC_MW( ACA_IDX )
-         CFAC_AK   = 1.0D-6 / AEROSPC_MW( AK_IDX )
-         CFAC_AMG  = 1.0D-6 / AEROSPC_MW( AMG_IDX )
-         CFAC_ASEACAT = 1.0D-6 / AEROSPC_MW( ASEACAT_IDX )
+         CFAC_ANA  = 1.0D-6 / REAL( AEROSPC_MW( ANA_IDX ), 8 )
+         CFAC_ASO4 = 1.0D-6 / REAL( AEROSPC_MW( ASO4_IDX ), 8 )
+         CFAC_ANH4 = 1.0D-6 / REAL( AEROSPC_MW( ANH4_IDX ), 8 )
+         CFAC_ANO3 = 1.0D-6 / REAL( AEROSPC_MW( ANO3_IDX ), 8 )
+         CFAC_ACL  = 1.0D-6 / REAL( AEROSPC_MW( ACL_IDX ), 8 )
+         CFAC_ACA  = 1.0D-6 / REAL( AEROSPC_MW( ACA_IDX ), 8 )
+         CFAC_AK   = 1.0D-6 / REAL( AEROSPC_MW( AK_IDX ), 8 )
+         CFAC_AMG  = 1.0D-6 / REAL( AEROSPC_MW( AMG_IDX ), 8 )
+         CFAC_ASEACAT = 1.0D-6 / REAL( AEROSPC_MW( ASEACAT_IDX ), 8 )
          CFAC_GNH3 = 1.0D-6 / PRECURSOR_MW( NH3_IDX )
          CFAC_GHNO3= 1.0D-6 / PRECURSOR_MW( HNO3_IDX )
          CFAC_GHCL = 1.0D-6 / PRECURSOR_MW( HCL_IDX )
 
-         M3FAC_ANA  = 1.0D-9 * F6DPI / AEROSPC( ANA_IDX )%DENSITY
-         M3FAC_ASO4 = 1.0D-9 * F6DPI / AEROSPC( ASO4_IDX )%DENSITY
-         M3FAC_ANH4 = 1.0D-9 * F6DPI / AEROSPC( ANH4_IDX )%DENSITY
-         M3FAC_ANO3 = 1.0D-9 * F6DPI / AEROSPC( ANO3_IDX )%DENSITY
-         M3FAC_ACL  = 1.0D-9 * F6DPI / AEROSPC( ACL_IDX )%DENSITY
-         M3FAC_H2O  = 1.0D-9 * F6DPI / AEROSPC( AH2O_IDX )%DENSITY
+         M3FAC_ANA  = 1.0D-9 * F6DPI / REAL( AEROSPC( ANA_IDX )%DENSITY, 8 )
+         M3FAC_ASO4 = 1.0D-9 * F6DPI / REAL( AEROSPC( ASO4_IDX )%DENSITY, 8 )
+         M3FAC_ANH4 = 1.0D-9 * F6DPI / REAL( AEROSPC( ANH4_IDX )%DENSITY, 8 )
+         M3FAC_ANO3 = 1.0D-9 * F6DPI / REAL( AEROSPC( ANO3_IDX )%DENSITY, 8 )
+         M3FAC_ACL  = 1.0D-9 * F6DPI / REAL( AEROSPC( ACL_IDX )%DENSITY, 8 )
+         M3FAC_H2O  = 1.0D-9 * F6DPI / REAL( AEROSPC( AH2O_IDX )%DENSITY, 8)
 
          MWH2SO4 = PRECURSOR_MW( SULF_IDX ) ! molecular weight for H2SO4
          FAERH2SO4 = 1.0E-6 / MWH2SO4
 
-         COFCBAR_SO4 = SQRT( 8.0D0 * RGASUNIV / ( REAL(PI, 8) * MWH2SO4 * 1.0D-3 ) )
+         COFCBAR_SO4 = SQRT( 8.0 * RGASUNIV / ( PI * REAL( MWH2SO4,4 ) * 1.0E-3 ) )
          H2SO4RATM1 = AEROSPC_MW( ASO4_IDX ) / MWH2SO4
-         SO4FAC  = 1.0D-9 * F6DPI / AEROSPC( ASO4_IDX )%DENSITY
-         SOILFAC = 1.0D-9 * F6DPI / AEROSPC( ASOIL_IDX )%DENSITY
-         ANTHFAC = 1.0D-9 * F6DPI / AEROSPC( ACORS_IDX )%DENSITY
+         SO4FAC  = 1.0D-9 * F6DPI / REAL( AEROSPC( ASO4_IDX )%DENSITY, 8 )
+         SOILFAC = 1.0D-9 * F6DPI / REAL( AEROSPC( ASOIL_IDX )%DENSITY, 8)
+         ANTHFAC = 1.0D-9 * F6DPI / REAL( AEROSPC( ACORS_IDX )%DENSITY, 8)
 
          DF( KNH4 ) = 1.0D0 / CFAC_ANH4
          DF( KNO3 ) = 1.0D0 / CFAC_ANO3
@@ -1000,14 +1018,14 @@ C-----------------------------------------------------------------------
          DFH2OR8    = 1.0D6 * MWWAT      ! aerospc_mw(AH2O_IDX) (18.0 != 18.0153)
 
          ! Mol. wt ratios H2SO4/SO4, NH3/NH4, HNO3/NO3, HCL/CL
-         H2SO4RAT= PRECURSOR_MW( SULF_IDX ) / AEROSPC_MW( ASO4_IDX )
-         NH3RAT  = PRECURSOR_MW( NH3_IDX )  / AEROSPC_MW( ANH4_IDX )
-         HNO3RAT = PRECURSOR_MW( HNO3_IDX ) / AEROSPC_MW( ANO3_IDX )
-         HCLRAT  = PRECURSOR_MW( HCL_IDX )  / AEROSPC_MW( ACL_IDX )
+         H2SO4RAT= PRECURSOR_MW( SULF_IDX ) / REAL( AEROSPC_MW( ASO4_IDX ), 8 )
+         NH3RAT  = PRECURSOR_MW( NH3_IDX )  / REAL( AEROSPC_MW( ANH4_IDX ), 8 )
+         HNO3RAT = PRECURSOR_MW( HNO3_IDX ) / REAL( AEROSPC_MW( ANO3_IDX ), 8 )
+         HCLRAT  = PRECURSOR_MW( HCL_IDX )  / REAL( AEROSPC_MW( ACL_IDX ), 8 )
       END IF
 
 C *** Determine if Hybrid
-      TMP = 0.0
+      TMP = 0.0D0
 #ifdef noiso
       hybrid = .false.
 #else
@@ -1018,7 +1036,7 @@ C *** Determine if Hybrid
       HYBRID = ( TMP .GE. CUTOFF ) .AND. ( AIRRH .GE. 0.18 )
 #endif
 
-      DELT  = DT
+      DELT  = REAL( DT, 8 )
       TEMPI = AIRTEMP             ! assume const within synch timestep
       RHI   = MIN( 0.95, AIRRH )  ! "        "     "      "     "
 
@@ -1027,7 +1045,7 @@ C     H+ concentration
 
       CBAR_SO4 = COFCBAR_SO4 * SQRT( AIRTEMP )
 
-      HPLUS = 0.0
+      HPLUS = 0.0D0
       DO I = 1, N_MODE
          DO N = 1, N_AEROSPC
             IF(  AEROSPC( N )%tracer )CYCLE
@@ -1095,7 +1113,7 @@ C *** Adjust sulfuric acid vapor concentration to a value in
 C     equilibrium with the production of new particles and the
 C     condensation of sulfuric acid vapor on existing particles, based 
 C     on Equations A21 and A23 of Binkowski & Shankar (1995).
-         TMP = 0.0
+         TMP = 0.0d0
          DO I = 1, N_MODE
             TMP = TMP + FCONC_SO4( I,2 )
          END DO
@@ -1131,7 +1149,7 @@ C     calculated using Equation A17 of Binkowski & Shankar (1995). The
 C     condensation rate for accumulation mode (fine-equilibrium scheme) or 
 C     coarse mode (hybrid and dynamic schemes) is computed by difference, 
 C     to avoid mass conservation violations arising from numerical error.
-      TMP = 0.0
+      TMP = 0.0D0
       DO I = 1, N_MODE
          TMP = TMP + FCONC_SO4( I,2 )
       END DO
@@ -1342,7 +1360,7 @@ C *** Integrate mass transfer equation, convert flux from molar to mass
 
 C *** Calculate updated H+ concentration 
 
-            HPLUS( IMODE ) = 0.0
+            HPLUS( IMODE ) = 0.0D0
      &                     - AEROSPC( ASO4_IDX )%CHARGE * SO4                  / AEROSPC_MW( ASO4_IDX )
      &                     - AEROSPC( ANO3_IDX )%CHARGE * CFINAL( KNO3,IMODE ) / AEROSPC_MW( ANO3_IDX )
      &                     - AEROSPC( ACL_IDX )%CHARGE  * CFINAL( KCL, IMODE ) / AEROSPC_MW( ACL_IDX )
@@ -1415,7 +1433,7 @@ C *** Add water (no SOA) 2nd moment while preserving standard deviation
             WETM3 = DRYM3 + H2O * M3FAC_H2O
 
             !Calculate 2nd moment
-            DRYM2 = MAX( AEROMODE_MINM2( IMODE ), Y )
+            DRYM2 = MAX( REAL( AEROMODE_MINM2( IMODE ), 8 ), Y )
             WETM2 = DRYM2 * ( WETM3 / DRYM3 ) ** D_TWOTHIRDS
 
             MOMENT2_CONC( IMODE ) = WETM2
@@ -1470,8 +1488,6 @@ C *** Set flags to account for mass conservation violations in ISRP3F
 #ifndef noiso
       CALL ISOROPIA( WI, RHI, TEMPI, CNTRL, WT, GAS, AERLIQ,
      &               AERSLD, SCASI, OTHER )
-
-     ! Forward call
 
 C *** Save H+ concentration information in microgram/m3 for consistency
       EQLBHIJ = AERLIQ(1) * 1.0D6 * AEROSPC_MW( ah3op_idx)
@@ -1536,7 +1552,7 @@ C *** Apply modal partitioning of equilibrium aerosol mass
       ENDDO
 
       ! Initialize Final Concentrations
-      CFINAL = 0.0
+      CFINAL = 0.0D0
 
       ! Calculate Final Concentrations
       DO ISP = 1, NVOLINORG
@@ -1617,7 +1633,7 @@ C     net change in dry 2nd moment is production or loss
          ELSE
             Y = M2DRY_INIT( IMODE ) + DDRYM2DT * DELT
          END IF
-         moment2_conc( IMODE ) = MAX( AEROMODE_MINM2( IMODE ), Y ) ! 4 for outer
+         moment2_conc( IMODE ) = MAX( REAL(AEROMODE_MINM2( IMODE ), 8), Y )
 
       END DO
 
@@ -1627,7 +1643,7 @@ C *** Add water and SOA to 2nd moment while preserving standard deviation
       M2WET_FINAL = moment2_conc
 
 C *** Assign H+ Concentration to each Mode
-      HPLUS( 1:2 ) = 0.0
+      HPLUS( 1:2 ) = 0.0D0
       DO I = 1, N_AEROSPC
          IF(  AEROSPC( I )%tracer )CYCLE
          HPLUS( 1:2 ) = HPLUS( 1:2 )
@@ -1639,7 +1655,7 @@ C *** Assign H+ Concentration to each Mode
           H2O = 1.0 / H2O
           AEROSPC_CONC( AH3OP_IDX, 1:2 ) = EQLBHIJ * H2O * AEROSPC_CONC( AH2O_IDX, 1:2 )  ! 4
       ELSE
-          AEROSPC_CONC( AH3OP_IDX, 1:2 ) = CONMIN
+          AEROSPC_CONC( AH3OP_IDX, 1:2 ) = CONMIND
       END IF
       AEROSPC_CONC( AH3OP_IDX, 3 ) = HPLUS( 3 ) * AEROSPC_MW( ah3op_idx ) ! Coarse mode H+ concentration in ug/m3, 4
 
@@ -1663,14 +1679,26 @@ C     aerospc_conc variables. This should be for the wet distribution.
       DELH3OP( : ) = AEROSPC_CONC( AH3OP_IDX,: ) - CBUDGET0_H3OP( : )
 
       ! precision = 4
-      COND_BUDGET( AERONUM_MAP( : ) ) =  DELNUM( : )
-      COND_BUDGET( AEROSRF_MAP( : ) ) =  DELSRF( : )
-      COND_BUDGET( AEROSPC_MAP( ASO4_IDX,: ) ) = DELSO4( : )
-      COND_BUDGET( AEROSPC_MAP( ANH4_IDX,: ) ) = DELNH4( : )
-      COND_BUDGET( AEROSPC_MAP( ANO3_IDX,: ) ) = DELNO3( : )
-      COND_BUDGET( AEROSPC_MAP( ACL_IDX ,: ) ) = DELCL( : )
-      COND_BUDGET( AEROSPC_MAP( AH2O_IDX,: ) ) = DELH2O( : )
-      COND_BUDGET( AEROSPC_MAP( AH3OP_IDX,:) ) = DELH3OP( : )
+      DO MODE = 1,N_MODE
+      	COND_BUDGET(AERONUM_MAP(MODE)) = DELNUM(MODE)
+      	COND_BUDGET(AEROSRF_MAP(MODE)) = DELSRF(MODE)
+      	COND_BUDGET(AEROSPC_MAP(ASO4_IDX,MODE)) = DELSO4(MODE)
+      	COND_BUDGET( AEROSPC_MAP( ANH4_IDX,MODE ) ) = DELNH4( MODE )
+      	COND_BUDGET( AEROSPC_MAP( ANO3_IDX,MODE ) ) = DELNO3( MODE )
+     	COND_BUDGET( AEROSPC_MAP( ACL_IDX ,MODE ) ) = DELCL( MODE )
+      	COND_BUDGET( AEROSPC_MAP( AH2O_IDX,MODE ) ) = DELH2O( MODE )
+      	COND_BUDGET( AEROSPC_MAP( AH3OP_IDX,MODE) ) = DELH3OP( MODE )
+      ENDDO
+       
+C     
+C     COND_BUDGET( AERONUM_MAP( : ) ) =  DELNUM( : )
+C     COND_BUDGET( AEROSRF_MAP( : ) ) =  DELSRF( : )
+C     COND_BUDGET( AEROSPC_MAP( ASO4_IDX,: ) ) = DELSO4( : )
+C     COND_BUDGET( AEROSPC_MAP( ANH4_IDX,: ) ) = DELNH4( : )
+C     COND_BUDGET( AEROSPC_MAP( ANO3_IDX,: ) ) = DELNO3( : )
+C     COND_BUDGET( AEROSPC_MAP( ACL_IDX ,: ) ) = DELCL( : )
+C     COND_BUDGET( AEROSPC_MAP( AH2O_IDX,: ) ) = DELH2O( : )
+C     COND_BUDGET( AEROSPC_MAP( AH3OP_IDX,:) ) = DELH3OP( : )
 
       COND_BUDGET( PRECURSOR_MAP( SULF_IDX ) ) = SUM( -DELSO4(:) * H2SO4RAT)
       COND_BUDGET( PRECURSOR_MAP( NH3_IDX  ) ) = SUM( -DELNH4(:) * NH3RAT )
@@ -1726,7 +1754,7 @@ C *** Arguments:
       TYPE(hyperdual), INTENT( IN ) :: AM0   ! zeroth moment of mode  [ #/m**3 ]
       TYPE(hyperdual), INTENT( IN ) :: AM1   ! first moment of mode   [ m/m**3 ]
       TYPE(hyperdual), INTENT( IN ) :: AM2   ! second moment of mode  [ m**2/m**3 ]
-      TYPE(hyperdual),      INTENT( IN ) :: Dv    ! molecular diffusivity of the
+      REAL,            INTENT( IN ) :: Dv    ! molecular diffusivity of the
                                        ! condensing vapor  [ m**2/s ]
       TYPE(hyperdual),      INTENT( IN ) :: ALPHA ! accommodation coefficient
       TYPE(hyperdual),      INTENT( IN ) :: CBAR  ! kinetic velocity of condensing vapor [ m/s ]
@@ -1835,8 +1863,8 @@ C.. Set constants and local variables for Vehkamaki et al. (2002) scheme
       
       TYPE(hyperdual) :: A, B, C, D, E, F, G, H, I, J
 
-      TYPE(hyperdual) :: MW_H2SO4        ! MW of H2SO4 in [ g / mole ]        
-      TYPE(hyperdual) :: DENSITY_H2SO4   ! DENSITY of H2SO4 in [ kg / m**3 ]
+      REAL :: MW_H2SO4        ! MW of H2SO4 in [ g / mole ]        
+      REAL :: DENSITY_H2SO4   ! DENSITY of H2SO4 in [ kg / m**3 ]
 
       REAL, PARAMETER :: SCALEFAC = 1.0E-06           ! for [ 1 / m**3 ] ->  [ 1 / cm**3 ]
       REAL, PARAMETER :: MUG2G = 1.0E-6               ! [ ug  ] -> [ g ]                 
@@ -2426,9 +2454,9 @@ C-----------------------------------------------------------------------
 
 !     implicit none
 
-	use HDMod 
-	! implicit TYPE(hyperdual)(a-h, o-z)  questionable here
-      INCLUDE 'h_isrpia.inc'
+	  use HDMod 
+	  use ISORROPIAII_MAIN_MOD
+    ! INCLUDE 'h_isrpia.inc'
 
 C Arguments
       TYPE(hyperdual), INTENT( IN )  :: RHIN
@@ -2437,14 +2465,15 @@ C Arguments
       INTEGER IZ
 
 C Location in pure molality array (function of RH)
-      IZ = MIN( INT( RHIN * NZSR  + 0.5D0 ), NZSR )
+C force convert for IZ here
+      IZ = MIN( INT_HDUAL( RHIN * real(NZSR)  + 0.5D0 ), NZSR )
       IZ = MAX( IZ, 1 )
 
 C Default value
       M0I = 1.0D+5   ! array assignment
 
 C Actual values (10,11 not provided)
-      M0I( 01 ) = AWSC( IZ )   ! NACl
+      M0I( 01 ) = AWSC( IZ )  ! NACl
       M0I( 02 ) = AWSS( IZ )   ! (NA)2SO4
       M0I( 03 ) = AWSN( IZ )   ! NANO3
       M0I( 04 ) = AWAS( IZ )   ! (NH4)2SO4
@@ -2490,7 +2519,7 @@ C     SC   : Sub-case for aerosol composition
  
 C-----------------------------------------------------------------------
 
-	use HDMod 
+	  use HDMod 
       IMPLICIT NONE
 
       INTEGER, PARAMETER :: NCMP = 8    ! was NCMP  = 5    ! number of aerosol components
@@ -2781,7 +2810,7 @@ C   Technology, 20:253-265, 1994.
  
 C-----------------------------------------------------------------------
 
-	use HDMod 
+	  use HDMod 
       IMPLICIT NONE
 
       INCLUDE SUBST_CONST    ! for PI
