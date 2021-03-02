@@ -75,13 +75,13 @@ C aerosol emissions: [ppmv/s] for mass & number spcs, [m2/mol/s] for surface are
       PRIVATE
 
 C Variables for converting mass emissions rate to number emissions rate
-      TYPE(hyperdual)    :: FACNUM( N_EM_AERO_REF,N_MODE )
+      REAL   :: FACNUM( N_EM_AERO_REF,N_MODE )
 
 C Variables for converting mass emissions rate to 2nd moment emissions rate
-      TYPE(hyperdual)    :: FACSRF( N_EM_AERO_REF,N_MODE )
+      REAL   :: FACSRF( N_EM_AERO_REF,N_MODE )
 
 C Variables for Saving split factors between emission modes
-      TYPE(hyperdual), ALLOCATABLE :: SD_SPLIT( :,: )
+      REAL, ALLOCATABLE :: SD_SPLIT( :,: )
 
 C Variables for the thickness and volume of each grid cell
       REAL,    ALLOCATABLE :: CELLHGT( : ) ! grid-cell height [sigma]
@@ -202,7 +202,7 @@ C External Functions:
          INTEGER, EXTERNAL :: FINDEX       !  looks up number in table.
 
 C Local Variables:
-         TYPE(hyperdual)  DGV, SG, SPLIT_ACCUM
+         REAL  DGV, SG, SPLIT_ACCUM
 
 C Variables for calculating the volume of each grid cell
          REAL  DX1, DX2                            ! grid-cell width and length [m]
@@ -363,7 +363,7 @@ C-----------------------------------------------------------------------
        USE EMIS_VARS, ONLY: SD_NML, INTERPRET_EM_RULE_STREAM
        USE UTILIO_DEFN, ONLY: INDEX1, XSTAT1
          
-	use HDMod 
+	  use HDMod 
        IMPLICIT NONE
 
        INTEGER, INTENT( IN ) :: JDATE      ! current model date, coded YYYYDDD
@@ -489,8 +489,8 @@ C-----------------------------------------------------------------------
 
           ! Map Factors for Converting Aerosol Mass to Number and
           ! Surface Area to each Emission Stream
-          EM_STREAM_SIZE( ISRM )%FACNUM( :,: ) = 0.0
-          EM_STREAM_SIZE( ISRM )%FACSRF( :,: ) = 0.0
+          EM_STREAM_SIZE( ISRM )%FACNUM( :,: ) = 0.0d0
+          EM_STREAM_SIZE( ISRM )%FACSRF( :,: ) = 0.0d0
           DO ISD = 2,N+1
              IEM = EM_STREAM_SIZE( ISRM )%REF( ISD )
              DO IM = 1,N_MODE
@@ -525,14 +525,14 @@ C ----------------------------------------------------------------------
 
 		 use HDMod 
          INTEGER, INTENT( IN ) :: ISRM, NL
-         TYPE(hyperdual), INTENT( INOUT ) :: VDEMIS ( :,:,:,: ) 
+         REAL, INTENT( INOUT ) :: VDEMIS ( :,:,:,: ) 
 
          INTEGER :: N, S, IAERO, IM, ISD, ISTR   ! Looping Variables
          INTEGER :: ROW, COL, LAY, N_SD, INUM, ISRF
-         TYPE(hyperdual)    :: FACNUM, FACSRF, MW_FAC
-         TYPE(hyperdual), ALLOCATABLE       :: EMISM3( :,:,:,:,: ) 
-         TYPE(hyperdual), ALLOCATABLE, SAVE :: GSFAC( :,:,: )
-         TYPE(hyperdual), ALLOCATABLE, SAVE :: DENS_FAC( : )
+         REAL    :: FACNUM, FACSRF, MW_FAC
+         REAL, ALLOCATABLE       :: EMISM3( :,:,:,:,: ) 
+         REAL, ALLOCATABLE, SAVE :: GSFAC( :,:,: )
+         REAL, ALLOCATABLE, SAVE :: DENS_FAC( : )
          REAL, PARAMETER   :: F6DPIM9 = 1.0E-9 * F6DPI  ! 1.0E-9 = Kg/ug
          LOGICAL, SAVE     :: FIRST_TIME = .TRUE.
 
@@ -550,7 +550,7 @@ C *** Initialize Variables
 
          N_SD   = EM_STREAM_SIZE( ISRM )%LEN 
          ALLOCATE( EMISM3( EMLAYS,NCOLS,NROWS,N_MODE,N_SD ) )
-         EMISM3 = 0.0D0
+         EMISM3 = 0.0
          !NL = EMLAYS
 
 C *** Calculate scaling factor for converting mass emissions into [ug/m3/s]
@@ -624,5 +624,127 @@ C     converts 2nd moment to surface area.
  
          END SUBROUTINE EMISS_SIZE_DIST
  
+ 
+ 
+ 		SUBROUTINE EMISS_SIZE_DIST_HD ( ISRM, VDEMIS, NL )
+
+C  EMISS_SIZE_DIST distributes bulk aerosol emissions into size space
+C  using parameters precompiled in the AERO_DATA module. 
+C
+C  Revision History:
+
+C   16 AUG 17 BMURPHY: Created
+C   HYPERDUAL VERSION J.E.L.
+C ----------------------------------------------------------------------
+
+         USE AERO_DATA, ONLY: AEROSPC, N_AEROSPC, AEROSPC_MWINV 
+         USE AEROMET_DATA, ONLY: F6DPI
+         USE ASX_DATA_MOD, ONLY: MET_DATA
+         USE EMIS_VARS, ONLY: N_EMIS_ISTR, IDUSTSRM, ISEASRM
+         USE GRID_CONF, ONLY: NCOLS, NROWS
+         USE SSEMIS, ONLY: SEA_FACTNUM, SEA_FACTSRF
+
+		 use HDMod 
+         INTEGER, INTENT( IN ) :: ISRM, NL
+         TYPE(hyperdual), INTENT( INOUT ) :: VDEMIS ( :,:,:,: ) 
+
+         INTEGER :: N, S, IAERO, IM, ISD, ISTR   ! Looping Variables
+         INTEGER :: ROW, COL, LAY, N_SD, INUM, ISRF
+         REAL    :: FACNUM, FACSRF, MW_FAC
+         TYPE(hyperdual), ALLOCATABLE       :: EMISM3( :,:,:,:,: ) 
+         REAL, ALLOCATABLE, SAVE :: GSFAC( :,:,: )
+         REAL, ALLOCATABLE, SAVE :: DENS_FAC( : )
+         REAL, PARAMETER   :: F6DPIM9 = 1.0E-9 * F6DPI  ! 1.0E-9 = Kg/ug
+         LOGICAL, SAVE     :: FIRST_TIME = .TRUE.
+
+C *** Initialize Variables  
+         IF ( FIRST_TIME ) THEN
+             FIRST_TIME = .FALSE.
+             ALLOCATE( GSFAC ( EMLAYS,NCOLS,NROWS ) )
+
+             ALLOCATE( DENS_FAC( N_AEROSPC ) )
+             DO IAERO = 1,N_AEROSPC
+                 DENS_FAC( IAERO ) = F6DPIM9 / AEROSPC( IAERO )%DENSITY
+             END DO
+
+         END IF
+
+         N_SD   = EM_STREAM_SIZE( ISRM )%LEN 
+         ALLOCATE( EMISM3( EMLAYS,NCOLS,NROWS,N_MODE,N_SD ) )
+         EMISM3 = 0.0d0
+         !NL = EMLAYS
+
+C *** Calculate scaling factor for converting mass emissions into [ug/m3/s]
+C     note: RJACM converts grid heights from sigma coordinates to meters
+C     Also calculate scaling factors for converting to molar-mixing-ratio units
+         DO LAY = 1,NL
+           GSFAC( LAY,:,: ) = Met_Data%RJACM( :,:,LAY ) / CELLVOL( LAY ) ![ug/s] to [ug/m3/s]
+         END DO
+ 
+C *** Apply Aerosol Size Distribution
+         DO ISTR = 1, N_EMIS_ISTR
+             ! Find which Size Distribution or Phase this emissions species belongs 
+             ! to for this stream. If the value is a 0, then there are no emissions 
+             ! for this species from this stream. If it is a 1, then this species is
+             ! a gas and the following aerosol conversions should be skipped.
+             ISD   = MAP_EMtoSD( ISTR,ISRM )
+             IF ( ISD .LE. 1 ) CYCLE
+             
+             ! Look up Aerosol Species and Mode of Interest
+             IAERO = MAP_EMtoAERO( ISTR )   !This maps to the CMAQ aerosol
+                                            !  species so we can retrieve density
+             IM    = MAP_EMtoMODE( ISTR )   !This maps to the internal CMAQ modes 
+                                            !  (ie. I, J, and K)
+             !DENS_FAC = F6DPIM9 / AEROSPC( IAERO )%DENSITY 
+
+             ! Convert Aerosol from [g/s] to [ug/m3/s] for all streams
+             ! except Dust and Sea Spray. For those streams, convert
+             ! [g/m3/s] to [ug/m3/s]
+             VDEMIS( ISTR,1:NL,:,: ) = VDEMIS( ISTR,1:NL,:,: )  * 1.0E6
+             IF ( ISRM .NE. ISEASRM .AND. ISRM .NE. IDUSTSRM ) THEN
+                VDEMIS( ISTR,1:NL,:,: ) = VDEMIS( ISTR,1:NL,:,: ) * GSFAC( 1:NL,:,: ) 
+             END IF
+
+             ! Sum Total Volume of Mode N [m3/m3/s]
+             IF ( .NOT. AEROSPC( IAERO )%TRACER ) 
+     &             EMISM3( 1:NL,:,:,IM,ISD ) = EMISM3( 1:NL,:,:,IM,ISD ) + 
+     &                  VDEMIS( ISTR,1:NL,:,: ) * DENS_FAC( IAERO )
+
+             ! Convert Mass Emission Rates from [ug/m3/s] to [umol/m3/s]
+             VDEMIS( ISTR,1:NL,:,: ) = VDEMIS( ISTR,1:NL,:,: ) * AEROSPC_MWINV( IAERO )
+         END DO          
+
+C *** Calculate the number emissions rate for each mode [1/m3/s], using 
+C     Equation 7b of Binkowski & Roselle (2003).
+C     Calculate the surface area emissions rate for the fine modes [m2/m3/s],
+C     using Equation 7c of Binkowski & Roselle (2003).  Multiplying by PI 
+C     converts 2nd moment to surface area.
+            
+         DO ISD = 2, N_SD   ! Skip the Index for the Gas Phase
+            !IF ( EM_AERO_REF( EM_STREAM_SIZE( ISRM )%REF( ISD ) )%NAME .EQ. 'SEASPRAY' ) THEN
+            IF ( ISRM .EQ. ISEASRM ) THEN
+               ! Apply Spatially-Dependent Number and Surface Area Scale Factors
+               DO IM = 1, N_MODE
+                  VDEMIS( MAP_NUMtoEM(IM),1,:,: ) = VDEMIS( MAP_NUMtoEM(IM),1,:,: ) 
+     &                     + EMISM3( 1,:,:,IM,ISD ) * SEA_FACTNUM( IM,:,: ) 
+                  VDEMIS( MAP_SRFtoEM(IM),1,:,: ) = VDEMIS( MAP_SRFtoEM(IM),1,:,: ) 
+     &                     + EMISM3( 1,:,:,IM,ISD ) * SEA_FACTSRF( IM,:,: ) 
+               END DO
+            ELSE
+               ! Apply Homogeneous Scale Factors Consistent with this Stream
+               DO IM = 1, N_MODE
+                  INUM = MAP_NUMtoEM(IM)
+                  FACNUM = EM_STREAM_SIZE( ISRM )%FACNUM( ISD,IM )
+                  VDEMIS( INUM,1:NL,:,: ) = VDEMIS( INUM,1:NL,:,: ) + EMISM3( 1:NL,:,:,IM,ISD ) * FACNUM
+                  ISRF = MAP_SRFtoEM(IM)
+                  FACSRF = EM_STREAM_SIZE( ISRM )%FACSRF( ISD,IM )
+                  VDEMIS( ISRF,1:NL,:,: ) = VDEMIS( ISRF,1:NL,:,: ) + EMISM3( 1:NL,:,:,IM,ISD ) * FACSRF
+               END DO
+            END IF
+         END DO
+ 
+         END SUBROUTINE EMISS_SIZE_DIST_HD
+         
+         
       END MODULE AERO_EMIS
 

@@ -84,24 +84,27 @@ contains
        subroutine getqext_BH (xx, crefin, qextalf, qscatalf, gscatalfg,SUCCESS)
        implicit none
 
-       real, intent(in)     :: XX 
-       real, intent(out)    :: qextalf, qscatalf, gscatalfg
-       complex, intent(in)  :: CREFIN
+       TYPE(hyperdual), intent(in)     :: XX 
+       TYPE(hyperdual), intent(out)    :: qextalf, qscatalf, gscatalfg
+       TYPE(hyperdual_cplx), intent(in)  :: CREFIN
        logical, intent(out) :: success
 !local        
        real( 8 ), parameter  :: one_third = 1.0d0 / 3.0d0
        integer              :: NXX
        integer              :: nstop, modulus
 
-       real :: QEXT, QSCA, QBACK, G_MIE, xx1
+       TYPE(hyperdual) :: QEXT, QSCA, QBACK, G_MIE
+       TYPE(hyperdual) :: XX1
        
        real( 8 )    :: x
-       complex( 8 ) :: refractive_index
+       TYPE(hyperdual_cplx) :: refractive_index
        
-       x = real( XX, 8 )
-       refractive_index = dcmplx( real( CREFIN ), imag( CREFIN ) )
-       
-       modulus = int( abs( x * refractive_index ) )      
+       x = real_hdual(XX) 
+!        refractive_index = dcmplx( real( CREFIN ), imag( CREFIN ) )
+       refractive_index = CREFIN  
+       ! Take out the x term from the hyperdual complex, should be the 
+       ! same for calculating the modulus J.E.L.
+       modulus = int( abs( x * refractive_index%x ) )      
        nstop = int( x + 4.0d0 * x**one_third + 2.0d0 )
        
        nxx = max( modulus, nstop ) + 15
@@ -367,33 +370,33 @@ contains
 ! *** input variables
       real, intent(in)    :: lamda_in               ! wavelengths  [micro-m]
       INTEGER, intent(in) :: nmode                  ! number of lognormal modes
-      real, intent(in)    :: nr( nmode), ni(nmode)  ! real and imaginary 
+      TYPE(hyperdual), intent(in)    :: nr( nmode), ni(nmode)  ! real and imaginary 
                                                     ! refractive indices
-      real, intent(in)    :: Vol(nmode)             ! modal aerosol volumes [m**3 /m**3]
-      real, intent(in)    :: dgn(nmode)             ! geometric mean diameters 
+      TYPE(hyperdual), intent(in)    :: Vol(nmode)             ! modal aerosol volumes [m**3 /m**3]
+      TYPE(hyperdual), intent(in)    :: dgn(nmode)             ! geometric mean diameters 
                                                     ! for number distribution [ m]
-      real, intent(in)    :: sig(nmode)             ! geometric standard deviation 
+      TYPE(hyperdual), intent(in)    :: sig(nmode)             ! geometric standard deviation 
 
       real, intent(in), optional :: modulus(nmode)  ! modulus of refracive index                          
       
 ! *** output variables 
-      real, intent(out)    :: bext    ! extinction coefficient [ 1 / m ]
-      real, intent(out)    :: bscat   ! scattering coefficient [ 1 / m ]
-      real, intent(out)    :: g_bar   ! assymetry factor for Mie and molecular scattering
+      TYPE(hyperdual), intent(out)    :: bext    ! extinction coefficient [ 1 / m ]
+      TYPE(hyperdual), intent(out)    :: bscat   ! scattering coefficient [ 1 / m ]
+      TYPE(hyperdual), intent(out)    :: g_bar   ! assymetry factor for Mie and molecular scattering
       logical, intent(out) :: success ! flag for successful calculation
 ! *** internal variables
       INTEGER  :: j             ! loop index
 !     real     :: xlnsig(nmode) ! natural log of geometric standard deviations      
-      real     :: beta_Sc, bsc  !aerosol scattering coefficient 
+      TYPE(hyperdual)     :: beta_Sc, bsc  !aerosol scattering coefficient 
  
-      real     :: beta_Ex       ! aerosol extinction coefficients       
-      real     :: G             ! modal aerosol assymetry factors
-      real     :: sum_g
-      real     :: LSIGX
+      TYPE(hyperdual)     :: beta_Ex       ! aerosol extinction coefficients       
+      TYPE(hyperdual)     :: G             ! modal aerosol assymetry factors
+      TYPE(hyperdual)     :: sum_g
+      TYPE(hyperdual)     :: LSIGX
       real     :: lamdam1       ! 1/ lamda
-      real     :: alphav        ! Mie size parameter
-      real     :: vfac
-      real     :: modalph
+      TYPE(hyperdual)     :: alphav        ! Mie size parameter
+      TYPE(hyperdual)     :: vfac
+      TYPE(hyperdual)     :: modalph
 
       real, parameter :: pi = 3.14159265359
 
@@ -411,9 +414,9 @@ contains
 
 ! *** initialize variables
        lamdam1 = 1.0e6 / lamda_in   ! lamda now in [ m ]
-       bext    = 0.0
-       bscat   = 0.0
-       sum_g   = 0.0
+       bext    = 0.0d0
+       bscat   = 0.0d0
+       sum_g   = 0.0d0
         
 !      write(30,*) ' inside aero_optical', ' lamda = ', lamda
       
@@ -513,23 +516,23 @@ contains
  
        implicit none
 
-       real, intent(in)     :: nr, ni     ! refractive indices
-       real, intent(in)     :: alfv       ! Mie parameter for dgv
-       real, intent(in)     :: xlnsig     ! log of geometric  standard deviation
-       real, intent(out)    :: Qext_GH    ! normalized extinction efficiency
-       real, intent(out)    :: Qscat_GH   ! normalized scattering efficiency
-       real, intent(out)    :: g_GH       ! asymmetry factor <cos>
+       TYPE(hyperdual), intent(in)     :: nr, ni     ! refractive indices
+       TYPE(hyperdual), intent(in)     :: alfv       ! Mie parameter for dgv
+       TYPE(hyperdual), intent(in)     :: xlnsig     ! log of geometric  standard deviation
+       TYPE(hyperdual), intent(out)    :: Qext_GH    ! normalized extinction efficiency
+       TYPE(hyperdual), intent(out)    :: Qscat_GH   ! normalized scattering efficiency
+       TYPE(hyperdual), intent(out)    :: g_GH       ! asymmetry factor <cos>
        logical, intent(out) :: success    ! flag for successful calculation
       
-       real    :: bext_P, bscat_P, babs_P, g_PCS, xlnsg2  ! see below for definition
+       TYPE(hyperdual)    :: bext_P, bscat_P, babs_P, g_PCS, xlnsg2  ! see below for definition
       
-       real    :: aa1                ! see below for definition
-       real    :: alfaip, alfaim     ! Mie parameters at abscissas
+       TYPE(hyperdual)    :: aa1                ! see below for definition
+       TYPE(hyperdual)    :: alfaip, alfaim     ! Mie parameters at abscissas
      
 !  *** these are Qext/alfa and Qscat/alfv at the abscissas
-       real    :: qalfip_e, qalfim_e ! extinction  
-       real    :: qalfip_s, qalfim_s ! scattering
-       real    :: gsalfp, gsalfm     ! scattering times asymmetry factor
+       TYPE(hyperdual)    :: qalfip_e, qalfim_e ! extinction  
+       TYPE(hyperdual)    :: qalfip_s, qalfim_s ! scattering
+       TYPE(hyperdual)    :: gsalfp, gsalfm     ! scattering times asymmetry factor
        integer :: IGH                ! index for GH quadrature      
 
 ! FSB define parameters 
@@ -541,9 +544,11 @@ contains
        real, parameter :: const = three_pi_two * sqrtpi1 
       
        integer :: i
-       complex :: crefin                  ! complex index of refraction      
-       real    :: sum_e,sum_s, xi,wxi,xf
-       real    :: sum_sg
+       TYPE(hyperdual_cplx) :: crefin                  ! complex index of refraction      
+       TYPE(hyperdual)    :: sum_e,sum_s
+       real               :: xi, wxi
+       TYPE(hyperdual) :: xf
+       TYPE(hyperdual)    :: sum_sg
 
 ! Gauss-Hermite abscissas and weights
 ! *** the following weights and abscissas are from Abramowitz
@@ -634,9 +639,9 @@ contains
 ! For Gauss-Hermite Quadrature u = xi 
 ! Therefore, xf = exp( xi / sqrt(A) ),
 !  or xf = exp( xi * aa1 ) 
-          sum_e  = 0.0
-          sum_s  = 0.0
-          sum_sg = 0.0
+          sum_e  = 0.0d0
+          sum_s  = 0.0d0
+          sum_sg = 0.0d0
 ! FSB do NMAX calls to the MIE codes
           do i = 1,NMAX
              xi      = GHXI(i)
@@ -694,25 +699,26 @@ contains
 
        implicit none 
 !     input variables
-       real, intent(in)  :: n, k     ! refractive index
-       real, intent(in)  :: xx       ! pi * diameter / wavelength
-       real, intent(in)  :: lnsg2    ! log(sigma_g)**2       
-       real, intent(out) :: bext     ! extinction coefficient
-       real, intent(out) :: bscat    ! scattering coefficient
-       real, intent(out) :: babs     ! absorption coefficient
-       real, intent(out) :: g        ! asmmetry factor
+       TYPE(hyperdual), intent(in)  :: n, k     ! refractive index
+       TYPE(hyperdual), intent(in)  :: xx       ! pi * diameter / wavelength
+       TYPE(hyperdual), intent(in)  :: lnsg2    ! log(sigma_g)**2       
+       TYPE(hyperdual), intent(out) :: bext     ! extinction coefficient
+       TYPE(hyperdual), intent(out) :: bscat    ! scattering coefficient
+       TYPE(hyperdual), intent(out) :: babs     ! absorption coefficient
+       TYPE(hyperdual), intent(out) :: g        ! asmmetry factor
 
 !     internal variables
-       complex*16  :: m, m2,m4,m6,m21,m22 
-       complex*16  :: P,Q,R,S,T,U,V,W
-       complex*16  :: Qprime, Rprime,Sprime,Tprime
-       complex*16  :: Uprime, Vprime, Wprime
-       real*8      :: Qs, gQs, gpennCS
-       real*8      :: P1,P2, Q1, Q2 , S2,V1, V2 ! see usage
-       real*8      :: P1SQ, P2SQ  ! see usage
-       real*8      :: y, y2, y3, y4, y6, y7,  y8, y9       
-       real*8      :: x, x2, x3, x4, x6, x7,  x8, x9 
-       real        :: mag, modalf
+       TYPE(hyperdual_cplx)  :: m, m2,m4,m6,m21,m22 
+       TYPE(hyperdual_cplx)  :: P,Q,R,S,T,U,V,W
+       TYPE(hyperdual_cplx)  :: Qprime, Rprime,Sprime,Tprime
+       TYPE(hyperdual_Cplx)  :: Uprime, Vprime, Wprime
+       TYPE(hyperdual)      :: Qs, gQs, gpennCS
+       TYPE(hyperdual)      :: P1,P2, Q1, Q2 , S2,V1, V2 ! see usage
+       TYPE(hyperdual)      :: P1SQ, P2SQ  ! see usage
+       TYPE(hyperdual)      :: y, y2, y3, y4, y6, y7,  y8, y9       
+       TYPE(hyperdual)      :: x, x2, x3, x4, x6, x7,  x8, x9 
+       ! real        :: mag, modalf
+       TYPE(hyperdual)  :: mag, modalf
 ! FSB define useful numbers and fractions 
        real, parameter :: pi = 3.14159265358979324d0 
        real, parameter :: three_pi_two = 1.5d0 * pi
@@ -747,12 +753,12 @@ contains
 !      real*8, parameter :: sixtyfour_two = 64.0d0 / two
 !      real*8, parameter :: fortynine_two = 49.0d0 / two
 !      real*8, parameter :: eightyone_two = 81.0d0 / two
-       real*8            :: A,B,C,D,E, AA,BB,CC
+       TYPE(hyperdual)            :: A,B,C,D,E, AA,BB,CC
 
 ! FSB start code
        mag = sqrt( n * n + k * k )
        modalf = mag * xx
-       y  = REAL( xx, 8 ) ! convert to real*8
+       y  = xx        ! removed conversion to real*8, make hyperdual
 ! FSB get powers of y        
        y2 = y * y
        y3 = y2 * y
@@ -777,7 +783,7 @@ contains
 
         
 ! FSB explicitly calculate complex refrative index m        
-       m = dcmplx(n,-k)
+       m = cmplx(n,-k)
 ! FSB get powers and functions of m        
        m2 = m * m
        m4 = m2 * m2
@@ -806,12 +812,12 @@ contains
 ! FSB Get bext from Penndorf (1962a) Equation (7) up to x4 
 !     consistent with equation (8)
 !     We have then divided through by x and integrated analytically
-       bext = REAL( four * P2 + ( 2.4d0 * (P1 * Q2 + P2 * Q1 ) +  twothrds * S2          &
-            + twofifteenths * V2 ) * x2 + ( eightthirds * ( P1SQ - P2SQ ) ) * x3, 4 )
+       bext = four * P2 + ( 2.4d0 * (P1 * Q2 + P2 * Q1 ) +  twothrds * S2          &
+            + twofifteenths * V2 ) * x2 + ( eightthirds * ( P1SQ - P2SQ ) ) * x3
 
 ! FSB get bscat from Penndorf Equation (9) up to x4 
 !     we have divided through by x and integrated analytically
-       bscat = REAL( eightthirds * ( P1SQ + P2SQ ) * x3 )
+       bscat = eightthirds * ( P1SQ + P2SQ ) * x3 
 ! FSB calculate babs
 !      babs = bext - bscat
 
@@ -820,8 +826,8 @@ contains
 ! *** The following additional variables from Caldas & Semiao (2001)
 !     are defined in Equations 10a to 10h.
 
-       R = (m6 + 20.0d0*m4 -200.0d0*m2 + 200.0d0) / m22**2
-       T = m21 / ( ( 2.0d0 * M2 + 3.0d0) **2 )
+       R = (m6 + 20.0d0*m4 -200.0d0*m2 + 200.0d0) / m22**2.0d0
+       T = m21 / ( ( 2.0d0 * M2 + 3.0d0) **2.0d0 )
        U = m21 / (3.0d0 * M2 + 4.0d0 )
        W = m21 * ( 2.0d0 * m2 - 5.0d0)
 
@@ -858,12 +864,12 @@ contains
        A = 1.0D0 * x4
        B = onefifteenth * real(Qprime) * x6 
        C = fourthirds * aimag(P) * x7
-       D = one_big * ( 35.0d0 * abs(Qprime)**2                             &
-           + 20.0d0 * real(Rprime) + 35.0d0 * abs(Vprime)**2               &
-           + 21.0d0 * abs(Sprime)**2 ) * x8     
+       D = one_big * ( 35.0d0 * abs(Qprime)**2.0d0                             &
+           + 20.0d0 * real(Rprime) + 35.0d0 * abs(Vprime)**2.0d0               &
+           + 21.0d0 * abs(Sprime)**2.0d0 ) * x8     
        E = two_fortyfive * aimag( Qprime * ( P - conjg(P) )) * x9   
        
-       Qs = eightthirds * abs(P)**2 *( A + B + C + D + E )
+       Qs = eightthirds * abs(P)**2.0d0 *( A + B + C + D + E )
        
        AA = (5.0d0 * Real(Vprime) + 3.0d0 * real(Sprime) ) * x6 
        BB = one_210 * ( 35.0d0 * real(Vprime*conjg(Qprime) )               &
@@ -872,10 +878,10 @@ contains
        CC = twothrds * ( 5.0d0 * aimag(Vprime * conjg(P) )                 &
             + 3.0d0 * aimag(Sprime * conjg(P) ) ) * x9    
 
-       gQs = four_225 * abs(P)**2 * ( AA + BB + CC )
+       gQs = four_225 * abs(P)**2.0d0 * ( AA + BB + CC )
       
 ! FSB calculate asymmetry factor and adjust with empirical term.      
-       g = REAL(gQs / Qs)
+       g = gQs / Qs
 !  FSB now multiply by three_pi_two  get output  values        
        bext  = three_pi_two * bext  
        bscat = three_pi_two * bscat 
@@ -915,15 +921,15 @@ contains
       
 ! *** internal variables
 !     real :: xlnsig(nmode) ! natural log of geometric standard deviations      
-      real :: beta_Sc       ! aerosol scattering coefficient 
+      TYPE(hyperdual) :: beta_Sc       ! aerosol scattering coefficient 
  
-      real :: beta_Ex       ! aerosol extinction coefficients       
-      real :: G             ! modal aerosol assymetry factors
+      TYPE(hyperdual) :: beta_Ex       ! aerosol extinction coefficients       
+      TYPE(hyperdual) :: G             ! modal aerosol assymetry factors
       real :: sum_g
-      real :: LSIGX
+      TYPE(hyperdual) :: LSIGX
       real :: lamdam1       ! 1/ lamda
-      real :: alphav        ! Mie size parameter
-      real :: vfac
+      TYPE(hyperdual) :: alphav        ! Mie size parameter
+      TYPE(hyperdual) :: vfac
       real, parameter :: pi = 3.14159265359
 
        Logical, Save :: Initialize = .True.
@@ -984,7 +990,7 @@ contains
 ! ------------------------------------------------------------------
        subroutine aero_optical_CS ( lamda_in, refcor,refshell, VOLCOR,   &
                                     VOLSHELL, DGNCOR, DGNSHELL, SIG,     &
-                                    bext, bscat, gfac, succesS )
+                                    bext, bscat, gfac, success )
      
 ! FSB NOTE: values for one mode are returend      
 ! *** calculate the extinction and scattering coefficients and
@@ -1014,15 +1020,15 @@ contains
       
 ! *** internal variables
 !      real    :: xlnsig(nmode)    ! natural log of geometric standard deviations      
-       real    :: beta_Sc          ! aerosol scattering coefficient 
+       TYPE(hyperdual)    :: beta_Sc          ! aerosol scattering coefficient 
  
-       real    :: beta_Ex          ! aerosol extinction coefficients       
-       real    :: G                ! modal aerosol assymetry factors
-       real    :: LSIGX
-       real    :: XX, YY           ! Mie size parameter
-       real    :: expfac
+       TYPE(hyperdual)    :: beta_Ex          ! aerosol extinction coefficients       
+       TYPE(hyperdual)    :: G                ! modal aerosol assymetry factors
+       TYPE(hyperdual)    :: LSIGX
+       TYPE(hyperdual)    :: XX, YY           ! Mie size parameter
+       TYPE(hyperdual)    :: expfac
        real    :: lamdam1          ! 1/ lamda
-       real    :: vfac
+       TYPE(hyperdual)    :: vfac
        
        Logical, Save :: Initialize = .True.
 
@@ -1106,22 +1112,22 @@ contains
 !
        implicit none
 
-       complex, intent(in) :: crefin     ! complex index of refraction
-       real, intent(in)    :: alfv       ! Mie parameter for dgv
-       real, intent(in)    :: xlnsig     ! log of geometric  standard deviation
-       real, intent(out)   :: Qext_GH    ! normalized extinction efficiency
-       real, intent(out)   :: Qscat_GH   ! normalized scattering efficiency
-       real, intent(out)   :: g_GH       ! asymmetry factor <cos>
+       TYPE(hyperdual_cplx), intent(in) :: crefin     ! complex index of refraction
+       TYPE(hyperdual), intent(in)    :: alfv       ! Mie parameter for dgv
+       TYPE(hyperdual), intent(in)    :: xlnsig     ! log of geometric  standard deviation
+       TYPE(hyperdual), intent(out)   :: Qext_GH    ! normalized extinction efficiency
+       TYPE(hyperdual), intent(out)   :: Qscat_GH   ! normalized scattering efficiency
+       TYPE(hyperdual), intent(out)   :: g_GH       ! asymmetry factor <cos>
        logical, intent(out) :: success   ! flag for successful calculation
        
-       real    :: nr                 ! real part of  refractive index      
-       real    :: aa1                ! see below for definition
-       real    :: alfaip, alfaim     ! Mie parameters at abscissas
+       TYPE(hyperdual)    :: nr                 ! real part of  refractive index      
+       TYPE(hyperdual)    :: aa1                ! see below for definition
+       TYPE(hyperdual)    :: alfaip, alfaim     ! Mie parameters at abscissas
      
 !  *** these are Qext/alfa and Qscat/alfv at the abscissas
-       real    :: qalfip_e, qalfim_e ! extinction  
-       real    :: qalfip_s, qalfim_s ! scattering
-       real    :: gsalfp, gsalfm     ! scattering times asymmetry factor
+       TYPE(hyperdual)    :: qalfip_e, qalfim_e ! extinction  
+       TYPE(hyperdual)    :: qalfip_s, qalfim_s ! scattering
+       TYPE(hyperdual)    :: gsalfp, gsalfm     ! scattering times asymmetry factor
        integer :: IGH                ! index for GH quadrature      
 
 ! FSB define parameters 
@@ -1133,8 +1139,10 @@ contains
        real, parameter :: const = three_pi_two * sqrtpi1 
        
        integer ::  i
-       real    ::  sum_e,sum_s, xi,wxi,xf
-       real    ::  sum_sg
+       TYPE(hyperdual)    ::  sum_e,sum_s
+       real               ::  xi, wxi
+       TYPE(hyperdual)    ::  xf
+       TYPE(hyperdual)    ::  sum_sg
 
 ! Gauss-Hermite abscissas and weights
 ! *** the following weights and abscissas are from Abramowitz
@@ -1177,7 +1185,8 @@ contains
 !     the computational efficiency without sacrificing accuracy.
 
 
-       nr = real(crefin)      
+       ! nr = real(crefin)
+       nr = real_from_hdual_cplx(crefin)      
 
        IGH=3 ! default value; six_point is sufficient generally
 ! six point
@@ -1219,9 +1228,9 @@ contains
 ! Therefore, xf = exp( xi / sqrt(A) ),
 !  or xf = exp( xi * aa1 ) 
 
-       sum_e  = 0.0
-       sum_s  = 0.0
-       sum_sg = 0.0
+       sum_e  = 0.0d0
+       sum_s  = 0.0d0
+       sum_sg = 0.0d0
 ! FSB do NMAX calls to the MIE codes      
        do i = 1,NMAX
           xi      = GHXI(i)
@@ -1277,20 +1286,20 @@ contains
 !      symmetric  points.
 !
        implicit none
-       complex, intent(in) :: RCORE      ! refractive index of core
-       complex, intent(in) :: RSHELL     ! refractive index of shell
-       real, intent(in)    :: XX         ! Mie parameter for core
-       real, intent(in)    :: YY         ! Mie parameter for shell
-       real, intent(in)    :: xlnsig     ! log of geometric  standard deviation
-       real, intent(out)   :: Qext_GH    ! normalized extinction efficiency
-       real, intent(out)   :: Qscat_GH   ! normalized scattering efficiency
-       real, intent(out)   :: g_GH       ! asymmetry factor <cos>
+       TYPE(hyperdual_cplx), intent(in) :: RCORE      ! refractive index of core
+       TYPE(hyperdual_cplx), intent(in) :: RSHELL     ! refractive index of shell
+       TYPE(hyperdual), intent(in)    :: XX         ! Mie parameter for core
+       TYPE(hyperdual), intent(in)    :: YY         ! Mie parameter for shell
+       TYPE(hyperdual), intent(in)    :: xlnsig     ! log of geometric  standard deviation
+       TYPE(hyperdual), intent(out)   :: Qext_GH    ! normalized extinction efficiency
+       TYPE(hyperdual), intent(out)   :: Qscat_GH   ! normalized scattering efficiency
+       TYPE(hyperdual), intent(out)   :: g_GH       ! asymmetry factor <cos>
        logical, intent(out) :: success   ! flag for successful calculation
 
-       real    :: nr                     ! real part of  refractive index      
-       real    :: aa1                    ! see below for definition
-       real    :: XXP, XXM               ! Mie parameters at abscissas - CORE
-       real    :: YYP, YYM               ! Mie parameters at abscissas - SHELL
+       TYPE(hyperdual)    :: nr                     ! real part of  refractive index      
+       TYPE(hyperdual)    :: aa1                    ! see below for definition
+       TYPE(hyperdual)    :: XXP, XXM               ! Mie parameters at abscissas - CORE
+       TYPE(hyperdual)    :: YYP, YYM               ! Mie parameters at abscissas - SHELL
      
 ! FSB define parameters 
       real, parameter :: pi = 3.14159265
@@ -1301,13 +1310,14 @@ contains
       real, parameter ::  const = three_pi_two * sqrtpi1 
  
 !  *** these are Qext/alfa and Qscat/alfv at the abscissas
-       real    :: qalfip_e, qalfim_e     ! extinction  
-       real    :: qalfip_s, qalfim_s     ! scattering
-       real    :: gsalfp, gsalfm         ! scattering times asymmetry factor
+       TYPE(hyperdual)    :: qalfip_e, qalfim_e     ! extinction  
+       TYPE(hyperdual)    :: qalfip_s, qalfim_s     ! scattering
+       TYPE(hyperdual)    :: gsalfp, gsalfm         ! scattering times asymmetry factor
        integer :: IGH                    ! index for GH quadrature      
        integer ::  i
-       real    ::  sum_e,sum_s, xi,wxi,xf, temp
-       real    ::  sum_sg
+       TYPE(hyperdual)    ::  sum_e,sum_s,xf,temp
+       real    :: xi, wxi
+       TYPE(hyperdual)    ::  sum_sg
 
 ! Gauss-Hermite abscissas and weights
 ! *** the following weights and abscissas are from Abramowitz
@@ -1390,15 +1400,15 @@ contains
 ! For Gauss-Hermite Quadrature u = xi 
 ! Therefore, xf = exp( xi / sqrt(A) ),
 !  or xf = exp( xi * aa1 ) 
-       sum_e  = 0.0
-       sum_s  = 0.0
-       sum_sg = 0.0
+       sum_e  = 0.0d0
+       sum_s  = 0.0d0
+       sum_sg = 0.0d0
 ! FSB do NMAX calls to the MIE codes      
        do i = 1,NMAX
           xi      = GHXI(i)
           wxi     = GHWI(i)
           xf      = exp( xi * aa1 )
-          temp    = 1.0 / xf
+          temp    = 1.0d0 / xf
           XXP     = XX * xf
           XXM     = XX * temp ! division cheaper than another exp()
           YYP     = YY * xf
@@ -1423,13 +1433,13 @@ contains
        subroutine getqsgBHCS (XX,YY,RRFRL1,RRFRL2,qxtalf,qscalf,qsgalf, success)
        implicit none
 
-       real, intent(in)    :: XX, YY
-       real, intent(out)   :: qxtalf, qscalf, qsgalf
-       complex, intent(in) :: RRFRL1,RRFRL2            ! refractive indices Core , Shell 
+       TYPE(hyperdual), intent(in)    :: XX, YY
+       TYPE(hyperdual), intent(out)   :: qxtalf, qscalf, qsgalf
+       TYPE(hyperdual_cplx), intent(in) :: RRFRL1,RRFRL2            ! refractive indices Core , Shell 
        logical, intent(out) :: success                 ! flag for successful calculation
 
-       real    :: QEXT, QSCA, QBACK, G_MIE
-       real    :: xx1
+       TYPE(hyperdual)    :: QEXT, QSCA, QBACK, G_MIE
+       TYPE(hyperdual)    :: xx1
        character (len = 20) :: mystr1, mystr2, mystr3, mystr4
 
        xx1    = 1.0 / YY
@@ -1465,14 +1475,16 @@ contains
       SUBROUTINE BHCOAT (XX, YY, RRFRL1, RRFRL2, QQEXT, QQSCA, QBACK, GGSCA, SUCCESS)
       
       use complex_number_module
+      use HDMod
+      use HDMod_cplx
 
       implicit none ! added by FSB
 
 ! Arguments:
-       real, intent(in)    :: XX,YY             ! Defined below
-       complex, intent(in) :: RRFRL1,RRFRL2     ! Defined below
-       real, intent(out)   :: QQEXT,QQSCA,QBACK ! Defined below
-       real, intent(out)   :: GGSCA             ! asymmetry factor <cos> added by FSB
+       TYPE(hyperdual), intent(in)    :: XX,YY             ! Defined below
+       TYPE(hyperdual_cplx), intent(in) :: RRFRL1,RRFRL2     ! Defined below
+       TYPE(hyperdual), intent(out)   :: QQEXT,QQSCA,QBACK ! Defined below
+       TYPE(hyperdual), intent(out)   :: GGSCA             ! asymmetry factor <cos> added by FSB
        logical,intent(out) :: success
 
 ! Local variables:
@@ -1481,7 +1493,9 @@ contains
        real*8, parameter     :: ONE = 1.0D0, TWO = 2.0D0 
 !      complex*16, save :: II
 !      data II/(0.D0,1.D0)/
-       type(complex_number) :: II
+!     type(complex_number) :: II
+
+	   complex(kind=8)  :: II
 
        integer :: IFLAG,N,NSTOP
 
@@ -1491,12 +1505,12 @@ contains
 !              del is the inner sphere convergence criterion
 !         -----------------------------------------------------------
      
-       real*8 :: CHI0Y,CHI1Y,CHIY,PSI0Y,PSI1Y,PSIY,QEXT,RN,QSCA,X,Y,YSTOP,GSCA
-       real*8 :: TWO_N_M_ONE, TWO_N_P_ONE
-       real*8 :: RY, RYY, RNRY, RN1, factor
+       TYPE(hyperdual) :: CHI0Y,CHI1Y,CHIY,PSI0Y,PSI1Y,PSIY,QEXT,RN,QSCA,X,Y,YSTOP,GSCA
+       TYPE(hyperdual) :: TWO_N_M_ONE, TWO_N_P_ONE
+       TYPE(hyperdual) :: RY, RYY, RNRY, RN1, factor
        
 !      complex*16 :: AMESS1,AMESS2,AMESS3,AMESS4,AN,ANCAP,AN1, BN,BNCAP,BN1, BRACK,   &
-       type(complex_number) :: AMESS1,AMESS2,AMESS3,AMESS4,AN,ANCAP,AN1, BN,BNCAP,BN1, BRACK,   &
+       TYPE(hyperdual_cplx) :: AMESS1,AMESS2,AMESS3,AMESS4,AN,ANCAP,AN1, BN,BNCAP,BN1, BRACK,   &
                      CHI0X2,CHI0Y2,CHI1X2,CHI1Y2,CHIX2,CHIPX2,CHIPY2,CHIY2,CRACK,     &
                      D0X1,D0X2,D0Y2,D1X1,D1X2,D1Y2,DNBAR,GNBAR,                       &
                      REFREL,RFREL1,RFREL2, XBACK,XI0Y,XI1Y,XIY,                       &
@@ -1550,7 +1564,7 @@ contains
 
        SUCCESS = .TRUE.      
 
-       II = c_set(0.0D0, 1.0D0)
+       II = CMPLX(0.0D0, 1.0D0)
 
 ! this technique will make the second 4 byte in the 8 byte variable be 0
 ! rather than arbitrary digits to increase accuracy
@@ -1565,41 +1579,56 @@ contains
 !      RFREL1%imag_part = aimag(RRFRL1)
 !      RFREL2%real_part = real(RRFRL2)
 !      RFREL2%imag_part = aimag(RRFRL2)
-       x1     = c_mul(x, rfrel1)
-       x2     = c_mul(x, rfrel2)
-       y2     = c_mul(y, rfrel2)
-       RCX1   = c_div(ONE, X1)
-       RCX2   = c_div(ONE, X2)
-       RCY2   = c_div(ONE, Y2)
-       refrel = c_div(rfrel2, rfrel1)
+       x1     = x * rfrel1
+       x2     = x * rfrel2
+       y2     = y * rfrel2
+       RCX1   = ONE / X1
+       RCX2   = ONE / X2
+       RCY2   = ONE / Y2
+       refrel = rfrel2 / rfrel1
        ystop  = y + 4.0 * y**0.3333 + 2.0
-       nstop  = INT( ystop )
+       nstop  = int_hdual( ystop )
 
 !         -----------------------------------------------------------
 !              series terminated after nstop terms
 !         -----------------------------------------------------------
 
 !   initialize variables 
-       d0x1   = c_div(c_cos(x1), c_sin(x1))
-       d0x2   = c_div(c_cos(x2), c_sin(x2))
-       d0y2   = c_div(c_cos(y2), c_sin(y2))
+       d0x1   = cos(x1) / sin(x1)
+       d0x2   = cos(x2) / sin(x2)
+       d0y2   = cos(y2) / sin(y2)
 
        psi0y  = cos(y)
        psi1y  = sin(y)
        chi0y  = -sin(y)
        chi1y  = cos(y)
 
-       xi0y   = c_sub(psi0y, c_mul(chi0y, II))
-       xi1y   = c_sub(psi1y, c_mul(chi1y, II))
 
-       chi0y2 = c_mul(-1.0d0, c_SIN(y2))
-       chi1y2 = c_COS(y2)
-       chi0x2 = c_mul(-1.0d0, c_SIN(x2))
-       chi1x2 = c_COS(x2)
+!      Modification by J.E.L, replaced old code to 
+!      incorporate hyperdual complex here
+
+	   xi0y%x = CMPLX(psi0y%x, -chi0y%x)
+	   xi0y%dx1 = CMPLX(psi0y%dx1, -chi0y%dx1)
+	   xi0y%dx2 = CMPLX(psi0y%dx2, -chi0y%dx2)
+	   xi0y%dx1x2 = CMPLX(psi0y%dx1x2, -chi0y%dx1x2)
+	   
+	   xi1y%x = CMPLX(psi1y%x, -chi1y%x)
+	   xi1y%dx1 = CMPLX(psi1y%dx1, -chi1y%dx1)
+	   xi1y%dx2 = CMPLX(psi1y%dx2, -chi1y%dx2)
+	   xi1y%dx1x2 = CMPLX(psi1y%dx1x2, -chi1y%dx1x2)
+	
+	
+!        xi0y   = psi0y - hdual_mul_cplx(chi0y, II)
+!        xi1y   = psi1y - hdual_mul_cplx(chi1y, II)
+
+       chi0y2 = -1.0d0 * SIN(y2)
+       chi1y2 = COS(y2)
+       chi0x2 = -1.0d0 * SIN(x2)
+       chi1x2 = COS(x2)
        qsca   = 0.0d0
        qext   = 0.0d0
        GSCA   = 0.0d0
-       xback  = c_set(0.0d0, 0.0d0)
+       xback  = CMPLX(0.0d0, 0.0d0, kind=8)
        iflag  = 0
        factor = 1.0d0
 
@@ -1607,59 +1636,89 @@ contains
 
 ! FSB Start main loop      
        DO n = 1, nstop
-          rn = REAL( n, 8 )
+          rn = n 
           RN1 = ONE / RN
           TWO_N_M_ONE = TWO * RN - ONE
           TWO_N_P_ONE = TWO * RN + ONE
           psiy = (TWO_N_M_ONE)*psi1y*RY - psi0y
           chiy = (TWO_N_M_ONE)*chi1y*RY - chi0y
-          xiy  = c_sub(psiy, c_mul(chiy, II))
-          d1y2 = c_sub(c_div(ONE, c_sub(c_mul(rn, RCY2), d0y2)), c_mul(rn, RCY2))
+          
+          
+!         xiy  = c_sub(psiy, c_mul(chiy * II))
+          
+          xiy%x = CMPLX(psiy%x, -chiy%x)
+	   	  xiy%dx1 = CMPLX(psiy%dx1, -chiy%dx1)
+	   	  xiy%dx2 = CMPLX(psiy%dx2, -chiy%dx2)
+	      xiy%dx1x2 = CMPLX(psiy%dx1x2, -chiy%dx1x2)
+	      
+!         d1y2 = c_sub(c_div(ONE, c_sub(c_mul(rn, RCY2), d0y2)), c_mul(rn, RCY2))
+		  d1y2 = ONE / (rn * RCY2 - d0y2) - rn * RCY2
 
           IF (iflag .eq. 0) THEN
 ! *** Calculate inner sphere ancap, bncap
 !      and brack and crack
-             d1x1   = c_sub(c_div(ONE, c_sub(c_mul(rn, RCX1), d0x1)), c_mul(rn, RCX1))
-             d1x2   = c_sub(c_div(ONE, c_sub(c_mul(rn, RCX2), d0x2)), c_mul(rn, RCX2))
+!            d1x1   = c_sub(c_div(ONE, c_sub(c_mul(rn, RCX1), d0x1)), c_mul(rn, RCX1))
+			 d1x1   = ONE / (rn * RCX1 - d0x1) -  rn * RCX1
+!            d1x2   = c_sub(c_div(ONE, c_sub(c_mul(rn, RCX2), d0x2)), c_mul(rn, RCX2))
+             d1x2   = ONE / (rn * RCX2 - d0x2) -  rn * RCX2
+             
 
-             chix2  = c_sub(c_mul(c_mul(TWO*rn - ONE, chi1x2), RCX2), chi0x2)
-             chiy2  = c_sub(c_mul(c_mul(TWO*rn - ONE, chi1y2), RCY2), chi0y2)
+!              chix2  = c_sub(c_mul(c_mul(TWO*rn - ONE, chi1x2), RCX2), chi0x2)
+             chix2 = (TWO*rn - ONE) * chi1x2 * RCX2 - chi0x2
+!              chiy2  = c_sub(c_mul(c_mul(TWO*rn - ONE, chi1y2), RCY2), chi0y2)
+		     chiy2 = (TWO*rn - ONE) * chi1y2 * RCY2 - chi0y2
 
-             chipx2 = c_sub(chi1x2, c_mul(c_mul(rn, chix2), RCX2))
-             chipy2 = c_sub(chi1y2, c_mul(c_mul(rn, chiy2), RCY2))
+!              chipx2 = c_sub(chi1x2, c_mul(c_mul(rn, chix2), RCX2))
+!              chipy2 = c_sub(chi1y2, c_mul(c_mul(rn, chiy2), RCY2))
+
+		     chipx2 = chi1x2 - rn * chix2 * RCX2
+		     chipy2 = chi1y2 - rn * chiy2 * RCY2
 
 !            ANCAP  = (REFREL*D1X1 - D1X2) /                              & 
 !                     ( (REFREL*D1X1*CHIX2 - CHIPX2) * (CHIX2*D1X2 - CHIPX2) )
 
-             ANCAP = c_sub(c_mul(c_mul(REFREL, D1X1), CHIX2), CHIPX2)
-             ANCAP = c_mul(ANCAP, c_sub(c_mul(CHIX2, D1X2), CHIPX2))
-             ANCAP = c_div(c_sub(c_mul(REFREL, D1X1), D1X2), ANCAP)
+!              ANCAP = c_sub(c_mul(c_mul(REFREL, D1X1), CHIX2), CHIPX2)
+			 
+			 ANCAP = REFREL * D1X1 * CHIX2 - CHIPX2
+			 
+!              ANCAP = c_mul(ANCAP, c_sub(c_mul(CHIX2, D1X2), CHIPX2))
+             ANCAP = ANCAP * (CHIX2 * D1X2 - CHIPX2)
+             
+!              ANCAP = c_div(c_sub(c_mul(REFREL, D1X1), D1X2), ANCAP)
 
-             brack  = c_mul(ancap, c_sub(c_mul(chiy2, d1y2), chipy2))
+	  		 ANCAP = (REFREL * D1X1 - D1X2) / ANCAP
 
-             bncap  = c_sub(c_mul(refrel, d1x2), d1x1)
-             bncap  = c_div(bncap, c_sub(c_mul(refrel, chipx2), c_mul(d1x1, chix2)))
-             bncap  = c_div(bncap, c_sub(c_mul(chix2, d1x2), chipx2))
+!              brack  = c_mul(ancap, c_sub(c_mul(chiy2, d1y2), chipy2))
+		     brack  = ancap * (chiy2 * d1y2 - chipy2)
+		      
+!              bncap  = c_sub(c_mul(refrel, d1x2), d1x1)
+		     bncap  = refrel * d1x2 - d1x1
+		     
+!              bncap  = c_div(bncap, c_sub(c_mul(refrel, chipx2), c_mul(d1x1, chix2)))
+			 bncap = bncap / (refrel * chipx2 - d1x2 * chix2)
+!              bncap  = c_div(bncap, c_sub(c_mul(chix2, d1x2), chipx2))
+             bncap = bncap / (chix2 * d1x2 - chipx2)
 
-             crack  = c_mul(bncap, c_sub(c_mul(chiy2, d1y2), chipy2))
+!              crack  = c_mul(bncap, c_sub(c_mul(chiy2, d1y2), chipy2))
+			 crack = bncap * (chiy2 * d1y2 - chipy2)
 ! *** calculate convergence test expressions
 !     for inner sphere.
 ! *** see pages 483-485 of Bohren & Huffman for
 !     definitions. 
-             amess1 = c_mul(brack, chipy2)
-             amess2 = c_mul(brack, chiy2)
-             amess3 = c_mul(crack, chipy2)
-             amess4 = c_mul(crack, chiy2)
+             amess1 = brack * chipy2
+             amess2 = brack * chiy2
+             amess3 = crack * chipy2
+             amess4 = crack * chiy2
 
 ! Now test for convergence for inner sphere
 !  All four criteria must be satisfied. See page 484 of B & H
-             IF (c_ABS(amess1) .LE. del*c_ABS(d1y2)  .AND.                          &
-                (c_ABS(amess2) .LE. del)             .AND.                          &
-                (c_ABS(amess3) .LE. del*c_ABS(d1y2)) .AND.                          &
-                (c_ABS(amess4) .LE. del)                ) THEN
+             IF (ABS(amess1) .LE. del*ABS(d1y2)  .AND.                          &
+                (ABS(amess2) .LE. del)             .AND.                          &
+                (ABS(amess3) .LE. del*ABS(d1y2)) .AND.                          &
+                (ABS(amess4) .LE. del)                ) THEN
 !               convergence for inner sphere        
-                brack = c_set(0.0D0,0.0D0)
-                crack = c_set(0.0D0,0.0D0)
+                brack = cmplx(0.0D0,0.0D0, kind=8)
+                crack = cmplx(0.0D0,0.0D0, kind=8)
                 iflag = 1
 !         ELSE
 ! no convergence yet
@@ -1669,10 +1728,12 @@ contains
 
 ! *** note usage of brack and crack See equations on
 !     Page 485  and discussion on pages 486 -487 of B & H      
-          dnbar = c_sub(d1y2, c_mul(brack, chipy2))
-          dnbar = c_div(dnbar, c_sub(ONE, c_mul(brack, chiy2)))
-          gnbar = c_sub(d1y2, c_mul(crack, chipy2))
-          gnbar = c_div(gnbar, c_sub(ONE, c_mul(crack, chiy2)))
+          dnbar = d1y2 - brack * chipy2
+!           dnbar = c_div(dnbar, c_sub(ONE, c_mul(brack, chiy2)))
+          dnbar = dnbar / (ONE - brack * chiy2)
+          gnbar = d1y2 - crack * chipy2
+!           gnbar = c_div(gnbar, c_sub(ONE, c_mul(crack, chiy2)))
+ 		  gnbar = gnbar / (ONE - crack * chiy2)
 !*** Store previous values of an and bn for use 
 !    in computation of g=<cos(theta)>
           IF (N .GT. 1) THEN
@@ -1681,34 +1742,38 @@ contains
           END IF    
 ! *** update an and bn  
           RNRY = rn * RY 
-          FAC1 = c_add(c_div(dnbar, rfrel2), RNRY)
+          
+! Removed original codes from here
 
-          an = c_sub(c_mul(psiy, FAC1), psi1y)
-          an = c_div(an, c_sub(c_mul(FAC1, xiy), xi1y))
-          FAC2 = c_add(c_mul(rfrel2, gnbar), RNRY)
-          bn = c_sub(c_mul(psiy, FAC2), psi1y)
-          bn = c_div(bn, c_sub(c_mul(FAC2, xiy), xi1y))
+          FAC1 = dnbar / rfrel2 + RNRY
+          an = psiy * FAC1 - psi1y
+          an = an / ( FAC1 * xiy - xi1y)
+          
+          FAC2 = rfrel2 * gnbar + RNRY
+          bn = psiy * FAC2 - psi1y
+          bn = bn / (FAC2 * xiy - xi1y)
       
 ! *** Calculate sums for qsca, qext, xback      
-          qsca  = qsca + (TWO_N_P_ONE) * (c_ABS(an)**2 + c_ABS(bn)**2)
+          qsca  = qsca + (TWO_N_P_ONE) * (ABS(an)**2.0d0 + ABS(bn)**2.0d0)
       
-          qext  = qext + TWO_N_P_ONE * (an%real_part + bn%real_part)
+          qext  = qext + TWO_N_P_ONE * (real(an) + real(bn))
       
 ! DW        XBACK = XBACK +  (TWO_N_P_ONE) * (-1.)**N * (AN-BN)
           FACTOR = FACTOR * (-1.0D0)
-          XBACK = c_add(XBACK, c_mul(TWO_N_P_ONE * FACTOR, c_sub(AN, BN)))
+!           XBACK = c_add(XBACK, c_mul(TWO_N_P_ONE * FACTOR, c_sub(AN - BN))
+          XBACK = XBACK + TWO_N_P_ONE * FACTOR * (AN - BN)
 
 ! FSB calculate the sum for the asymmetry factor 
 
           GSCA = GSCA + ((TWO_N_P_ONE)/(RN* (RN + ONE)))*                     &
-                 (an%real_part*bn%real_part + an%imag_part*bn%imag_part)
+                 (real(an)*real(bn) + imag(an)*imag(bn))
  
           IF (n .GT. 1) THEN
         
 ! DW         GSCA = GSCA + ((RN - ONE) * (RN + ONE) * RN1) *             &
              GSCA = GSCA + (RN - RN1) *                                  &
-                   (AN1%real_part*AN%real_part + AN1%imag_part*AN%imag_part +            &
-                    BN1%real_part*BN%real_part + BN1%imag_part*BN%imag_part)
+                   (real(AN1)*real(AN) + imag(AN1)*imag(AN) +            &
+                    real(BN1)*real(BN) + imag(BN1)*imag(BN))
      
           END IF
 ! continue update for next interation        
@@ -1716,7 +1781,13 @@ contains
           psi1y  = psiy
           chi0y  = chi1y
           chi1y  = chiy
-          xi1y   = c_sub(psi1y, c_mul(chi1y, II))
+          
+!           xi1y   = c_sub(psi1y, c_mul(chi1y, II))
+          xi1y%x = CMPLX(psi1y%x, -chi1y%x)
+	   	  xi1y%dx1 = CMPLX(psi1y%dx1, -chi1y%dx1)
+	   	  xi1y%dx2 = CMPLX(psi1y%dx2, -chi1y%dx2)
+	      xi1y%dx1x2 = CMPLX(psi1y%dx1x2, -chi1y%dx1x2)
+	      
           chi0x2 = chi1x2
           chi1x2 = chix2
           chi0y2 = chi1y2
@@ -1728,12 +1799,12 @@ contains
   
 !*** Have summed sufficient terms.
 !    Now compute QQSCA,QQEXT,QBACK,and GSCA
-       GGSCA = REAL( TWO * GSCA / qsca )
-       QQSCA = REAL( TWO * qsca * RYY )
-       QQEXT = REAL( TWO * qext * RYY )
+       GGSCA = TWO * GSCA / qsca 
+       QQSCA = TWO * qsca * RYY 
+       QQEXT = TWO * qext * RYY 
 !      QBACK = 0.5 * REAL ( ( xback * conjg(xback) ) * RYY )
 
-       QBACK = 0.5 * real((xback%real_part**2 + xback%imag_part**2) * RYY)
+       QBACK = 0.5d0 * (real(xback)**2 + imag(xback)**2) * RYY
 !      QBACK = real((xback%real_part**2 + xback%imag_part**2) * RYY)
 
 !       write (6, '(a19, 20e18.10)') ' ==d== bhcoat z ', GGSCA, GSCA, qsca
@@ -1770,22 +1841,22 @@ contains
        implicit none
 
        logical, intent(INOUT)        :: INIT       ! initialize number of qudraure points
-       complex, intent(in)           :: crefin     ! complex index of refraction
-       real, intent(in)              :: alfv       ! Mie parameter for dgv
-       real, intent(in)              :: xlnsig     ! log of geometric  standard deviation
-       real, intent(out)             :: Qext_GH    ! normalized extinction efficiency
-       real, intent(out)             :: Qscat_GH   ! normalized scattering efficiency
-       real, intent(out)             :: g_GH       ! asymmetry factor <cos>
+       TYPE(hyperdual_cplx), intent(in)           :: crefin     ! complex index of refraction
+       TYPE(hyperdual), intent(in)              :: alfv       ! Mie parameter for dgv
+       TYPE(hyperdual), intent(in)              :: xlnsig     ! log of geometric  standard deviation
+       TYPE(hyperdual), intent(out)             :: Qext_GH    ! normalized extinction efficiency
+       TYPE(hyperdual), intent(out)             :: Qscat_GH   ! normalized scattering efficiency
+       TYPE(hyperdual), intent(out)             :: g_GH       ! asymmetry factor <cos>
        logical, intent(out)          :: success    ! flag for successful calculation
        
-       real    :: nr                 ! real part of  refractive index      
-       real    :: aa1                ! see below for definition
-       real    :: alfaip, alfaim     ! Mie parameters at abscissas
+       TYPE(hyperdual)    :: nr                 ! real part of  refractive index      
+       TYPE(hyperdual)    :: aa1                ! see below for definition
+       TYPE(hyperdual)    :: alfaip, alfaim     ! Mie parameters at abscissas
      
 !  *** these are Qext/alfa and Qscat/alfv at the abscissas
-       real    :: qalfip_e, qalfim_e ! extinction  
-       real    :: qalfip_s, qalfim_s ! scattering
-       real    :: gsalfp, gsalfm     ! scattering times asymmetry factor
+       TYPE(hyperdual)    :: qalfip_e, qalfim_e ! extinction  
+       TYPE(hyperdual)    :: qalfip_s, qalfim_s ! scattering
+       TYPE(hyperdual)    :: gsalfp, gsalfm     ! scattering times asymmetry factor
 
 ! FSB define parameters 
        real, parameter :: pi = 3.14159265
@@ -1796,8 +1867,9 @@ contains
        real, parameter :: const = three_pi_two * sqrtpi1 
        
        integer ::  i
-       real    ::  sum_e,sum_s, xi,wxi,xf
-       real    ::  sum_sg
+       TYPE(hyperdual)    ::  sum_e,sum_s, xf
+       real               ::  xi, wxi
+       TYPE(hyperdual)    ::  sum_sg
 
        real,    allocatable,  save  :: GHXI(:), GHWI(:) ! weight and abscissas
        integer, save  :: IGH                            ! number of weights and abscissa
@@ -1870,9 +1942,9 @@ contains
 !  or xf = exp( xi * aa1 ) 
 
 !start integration at zero point
-       xi      = 0.0
+       xi      = 0.0d0
        wxi     = GHWI(NMAX+1)
-       xf      = 1.0
+       xf      = 1.0d0
        alfaip  = alfv
 ! fetch the effficiencies at zero point
 
@@ -1939,20 +2011,20 @@ contains
        implicit none
 
        logical, intent(inout) :: INIT       ! initialize number of qudraure points
-       complex, intent(in)    :: RCORE      ! refractive index of core
-       complex, intent(in)    :: RSHELL     ! refractive index of shell
-       real, intent(in)       :: XX         ! Mie parameter for core
-       real, intent(in)       :: YY         ! Mie parameter for shell
-       real, intent(in)       :: xlnsig     ! log of geometric  standard deviation
-       real, intent(out)      :: Qext_GH    ! normalized extinction efficiency
-       real, intent(out)      :: Qscat_GH   ! normalized scattering efficiency
-       real, intent(out)      :: g_GH       ! asymmetry factor <cos>
+       TYPE(hyperdual_cplx), intent(in)    :: RCORE      ! refractive index of core
+       TYPE(hyperdual_cplx), intent(in)    :: RSHELL     ! refractive index of shell
+       TYPE(hyperdual), intent(in)       :: XX         ! Mie parameter for core
+       TYPE(hyperdual), intent(in)       :: YY         ! Mie parameter for shell
+       TYPE(hyperdual), intent(in)       :: xlnsig     ! log of geometric  standard deviation
+       TYPE(hyperdual), intent(out)      :: Qext_GH    ! normalized extinction efficiency
+       TYPE(hyperdual), intent(out)      :: Qscat_GH   ! normalized scattering efficiency
+       TYPE(hyperdual), intent(out)      :: g_GH       ! asymmetry factor <cos>
        logical, intent(out)   :: success   ! flag for successful calculation
 
-       real    :: nr                     ! real part of  refractive index      
-       real    :: aa1                    ! see below for definition
-       real    :: XXP, XXM               ! Mie parameters at abscissas - CORE
-       real    :: YYP, YYM               ! Mie parameters at abscissas - SHELL
+       TYPE(hyperdual)    :: nr                     ! real part of  refractive index      
+       TYPE(hyperdual)    :: aa1                    ! see below for definition
+       TYPE(hyperdual)    :: XXP, XXM               ! Mie parameters at abscissas - CORE
+       TYPE(hyperdual)    :: YYP, YYM               ! Mie parameters at abscissas - SHELL
      
 ! FSB define parameters 
       real, parameter :: pi = 3.14159265
@@ -1963,12 +2035,13 @@ contains
       real, parameter ::  const = three_pi_two * sqrtpi1 
  
 !  *** these are Qext/alfa and Qscat/alfv at the abscissas
-       real    :: qalfip_e, qalfim_e     ! extinction  
-       real    :: qalfip_s, qalfim_s     ! scattering
-       real    :: gsalfp, gsalfm         ! scattering times asymmetry factor
+       TYPE(hyperdual)    :: qalfip_e, qalfim_e     ! extinction  
+       TYPE(hyperdual)    :: qalfip_s, qalfim_s     ! scattering
+       TYPE(hyperdual)    :: gsalfp, gsalfm         ! scattering times asymmetry factor
        integer ::  i
-       real    ::  sum_e,sum_s, xi,wxi,xf, temp
-       real    ::  sum_sg
+       TYPE(hyperdual)    ::  sum_e,sum_s,xf, temp
+       real    :: xi, wxi
+       TYPE(hyperdual)    ::  sum_sg
 
 
        real,    allocatable,  save  :: GHXI(:), GHWI(:) ! weight and abscissas
@@ -2044,7 +2117,7 @@ contains
 
           xi      = 0.0
           wxi     = GHWI(NMAX+1)
-          xf      = 1.0
+          xf      = 1.0d0
           XXP     = XX
           YYP     = YY
 
@@ -2093,10 +2166,10 @@ contains
        implicit none 
 
 ! Arguments:
-       real,    intent(in) :: X        ! X = pi*particle_diameter / Wavelength
+       TYPE(hyperdual),    intent(in) :: X        ! X = pi*particle_diameter / Wavelength
        integer, intent(in) :: NMX      ! maximum number of terms in Mie series 
        integer, intent(in) :: NSTOP    ! minumum number of terms in Mie series 
-       complex, intent(in) :: REFREL   ! refractive index
+       TYPE(hyperdual_cplx), intent(in) :: REFREL   ! refractive index
 
 !    REFREL = (complex refr. index of sphere)/(real index of medium)
 !    in the current use the index of refraction of the the medium
@@ -2104,7 +2177,7 @@ contains
 !
 !    Output
 
-       real,    intent(out) :: QQEXT, QQSCA, QBACK, GSCA
+       TYPE(hyperdual),    intent(out) :: QQEXT, QQSCA, QBACK, GSCA
        logical, intent(out) :: SUCCESS
 
 !     QQEXT   Efficiency factor for extinction
@@ -2139,13 +2212,13 @@ contains
 
 ! Local variables:
        integer    :: N, NN
-       real*8     :: QSCA, QEXT, DX1, DXX1      
-       real*8     :: CHI,CHI0,CHI1,DX,EN,P,PSI,PSI0,PSI1,XSTOP,YMOD               
-       real*8     :: TWO_N_M_ONE, TWO_N_P_ONE, EN1, FACTOR
-       complex*16 :: AN,AN1,BN,BN1,DREFRL,XI,XI1,Y, Y1, DREFRL1
-       complex*16 :: D(NMX)
-       complex*16 :: FAC1, FAC2
-       complex*16 :: XBACK
+       TYPE(hyperdual)     :: QSCA, QEXT, DX1, DXX1      
+       TYPE(hyperdual)     :: CHI,CHI0,CHI1,DX,EN,P,PSI,PSI0,PSI1,XSTOP,YMOD               
+       TYPE(hyperdual)     :: TWO_N_M_ONE, TWO_N_P_ONE, EN1, FACTOR
+       TYPE(hyperdual_cplx) :: AN,AN1,BN,BN1,DREFRL,XI,XI1,Y, Y1, DREFRL1
+       TYPE(hyperdual_cplx) :: D(NMX)
+       TYPE(hyperdual_cplx) :: FAC1, FAC2
+       TYPE(hyperdual_cplx) :: XBACK
 
 !***********************************************************************
 ! Subroutine BHMIE is the Bohren-Huffman Mie scattering subroutine
@@ -2196,11 +2269,13 @@ contains
 ! IF(NANG.GT.MXNANG)STOP'***Error: NANG > MXNANG in bhmie'
 !      IF (NANG .LT. 2) NANG = 2
 
-       DX = REAL( X, 8 )
+       ! DX = REAL( X, 8 )
+       DX = X
 ! FSB Define reciprocals so that divisions can be replaced by multiplications.      
        DX1  = ONE / DX
        DXX1 = DX1 * DX1
-       DREFRL = DCMPLX( REAL( REFREL ), IMAG( REFREL ) )
+!      DREFRL = DCMPLX( REAL( REFREL ), IMAG( REFREL ) )
+       DREFRL = REFREL
        DREFRL1 = ONE / DREFRL
        Y = DX * DREFRL
        Y1 = ONE / Y
@@ -2237,7 +2312,8 @@ contains
        D(NMX) = COMPLEX_DZERO
        NN = NMX - 1
        DO N = 1,NN
-          EN  = REAL( NMX - N + 1, 8 )
+          ! EN  = REAL( NMX - N + 1, 8 )
+          EN = NMX - N + 1
 ! FSB In the following division by Y has been replaced by 
 !     multiplication by Y1, the reciprocal of Y.          
           D(NMX-N) = ( EN * Y1 ) - (ONE / ( D(NMX-N+1) + EN * Y1)) 
@@ -2250,7 +2326,13 @@ contains
        PSI1 =  SIN(DX)
        CHI0 = -SIN(DX)
        CHI1 =  PSI0
-       XI1  =  DCMPLX(PSI1,-CHI1)
+!        XI1  =  CMPLX(PSI1,-CHI1)
+       
+       XI1%x = CMPLX(PSI1%x, -chi1%x)
+	   XI1%dx1 = CMPLX(PSI1%dx1, -chi1%dx1)
+	   XI1%dx2 = CMPLX(PSI1%dx2, -chi1%dx2)
+       XI1%dx1x2 = CMPLX(PSI1%dx1x2, -chi1%dx1x2)
+       
        QSCA =  0.0D0
        GSCA =  0.0D0
        QEXT =  0.0D0
@@ -2259,7 +2341,8 @@ contains
 
 ! FSB Start main loop       
        DO N = 1,NSTOP
-          EN        = REAL( N, 8 )
+          ! EN        = REAL( N, 8 )
+          EN        = N 
           EN1       = ONE / EN
           TWO_N_M_ONE = TWO * EN - ONE
 ! for given N, PSI  = psi_n        CHI  = chi_n
@@ -2268,7 +2351,12 @@ contains
 ! Calculate psi_n and chi_n
           PSI = TWO_N_M_ONE * PSI1 * DX1 - PSI0
           CHI = TWO_N_M_ONE * CHI1 * DX1 - CHI0
-          XI  = DCMPLX(PSI,-CHI)
+!           XI  = CMPLX(PSI,-CHI)
+
+		 XI%x = CMPLX(PSI%x, -CHI%x)
+	   	 XI%dx1 = CMPLX(PSI%dx1, -CHI%dx1)
+	   	 XI%dx2 = CMPLX(PSI%dx2, -CHI%dx2)
+	     XI%dx1x2 = CMPLX(PSI%dx1x2, -CHI%dx1x2)
  
 !*** Compute AN and BN:
 ! FSB Rearrange to get common terms
@@ -2283,7 +2371,7 @@ contains
 !     get common factor
           TWO_N_P_ONE = (TWO * EN + ONE)
           QEXT = QEXT + (TWO_N_P_ONE) * (REAL(AN) + REAL(BN) ) 
-          QSCA = QSCA + (TWO_N_P_ONE) * ( ABS(AN)**2 + ABS(BN)**2 )
+          QSCA = QSCA + (TWO_N_P_ONE) * ( ABS(AN)**2.0D0 + ABS(BN)**2.0D0 )
           
 ! FSB calculate XBACK from B & H Page 122          
           FACTOR = -1.0d0 * FACTOR  ! calculate (-1.0 ** N)
@@ -2291,13 +2379,13 @@ contains
           
 ! FSB calculate asymmetry factor   
        
-          GSCA = GSCA + REAL((TWO_N_P_ONE)/(EN * (EN + ONE)) *     &
+          GSCA = GSCA + (TWO_N_P_ONE)/(EN * (EN + ONE) *     &
                  (REAL(AN)*REAL(BN)+IMAG(AN)*IMAG(BN)))
 
           IF (N .GT. 1)THEN
-             GSCA = GSCA + REAL((EN - EN1) *                         &
+             GSCA = GSCA + (EN - EN1) *                         &
                     (REAL(AN1)*REAL(AN) + IMAG(AN1)*IMAG(AN) +  &
-                     REAL(BN1)*REAL(BN) + IMAG(BN1)*IMAG(BN)))
+                     REAL(BN1)*REAL(BN) + IMAG(BN1)*IMAG(BN))
           ENDIF
 
 !*** Store previous values of AN and BN for use in computation of g=<cos(theta)>
@@ -2309,20 +2397,27 @@ contains
           PSI1 = PSI
           CHI0 = CHI1
           CHI1 = CHI
-          XI1  = DCMPLX(PSI1,-CHI1)
+!           XI1  = DCMPLX(PSI1,-CHI1)
+		  XI1%x = CMPLX(PSI1%x, -CHI1%x)
+	   	  XI1%dx1 = CMPLX(PSI1%dx1, -CHI1%dx1)
+	   	  XI1%dx2 = CMPLX(PSI1%dx2, -CHI1%dx2)
+	      XI1%dx1x2 = CMPLX(PSI1%dx1x2, -CHI1%dx1x2)
 
        END DO   ! main  loop on n
  
 !*** Have summed sufficient terms.
 
 !    Now compute QQSCA,QQEXT,QBACK,and GSCA
-       GSCA  = REAL( TWO / QSCA ) * GSCA
+       GSCA  = TWO / QSCA * GSCA
 
 ! FSB in the following, divisions by DX * DX has been replaced by
 !      multiplication by DXX1 the reciprocal of 1.0 / (DX *DX)           
-       QQSCA = REAL( TWO * QSCA * DXX1 )
-       QQEXT = REAL( TWO * QEXT * DXX1 )
-       QBACK = REAL( REAL( 0.5D0 * XBACK * CONJG(XBACK), 8 ) * DXX1 ) ! B&H Page 122
+       QQSCA = TWO * QSCA * DXX1 
+       QQEXT = TWO * QEXT * DXX1
+       
+       ! QBACK = REAL( REAL( 0.5D0 * XBACK * CONJG(XBACK), 8 ) * DXX1 )
+       ! QQQ debug
+       QBACK = 0.5D0 * real(XBACK * CONJG(XBACK)) * DXX1 ! B&H Page 122
 
        END subroutine BHMIE_FLEXI
 

@@ -279,10 +279,14 @@ C *** variables for advancing concentrations one time step
       TYPE(hyperdual)         M20      ! for initial condidtions in time stepping
 
 C *** Variables for mode merging
-      TYPE(hyperdual)         GETAF
-      TYPE(hyperdual)         AAA, XNUM, XM2, XM3,XXM2, XXM3
-      TYPE(hyperdual)         FNUM, FM2, FM3, PHNUM, PHM2, PHM3
-      REAL                    ERF, ERFC    ! Error and complementary error function
+      TYPE(hyperdual) ::  GETAF
+      TYPE(hyperdual) ::  AAA, XNUM, XM2, XM3, XXM2, XXM3
+      TYPE(hyperdual) ::  FNUM, FM2, FM3, PHNUM, PHM2, PHM3
+
+C *** Comment this out, wrote overloading function for hyperdual
+C *** ERF and ERFC in util/util/HDMod.f90
+C *** REAL       ERF, ERFC 
+
 
 C *** local variables
       INTEGER      SPC        ! loop counter
@@ -461,7 +465,7 @@ C     Note: LOSS is assumed to be non-negative.
       END IF ! test on loss
 
 C *** Transfer new value of M2_Aitken to the array
-      MOMENT2_CONC( 1 ) = MAX( REAL( AEROMODE_MINM2( 1 ) ), REAL( Y ) )
+      MOMENT2_CONC( 1 ) = MAX( hdual_cast(real(AEROMODE_MINM2( 1 ),8) ), Y  )
 
 C *** Accumulation mode: initial value of M2
       M20 = MOMENT2_CONC( 2 )
@@ -484,7 +488,7 @@ C     Note: LOSS is assumed to be non-negative.
       END IF ! test on loss
 
 C *** Transfer new value of M2_accum to moment array
-      MOMENT2_CONC( 2 ) = MAX( REAL( AEROMODE_MINM2( 2 ) ), REAL( Y ) )
+      MOMENT2_CONC( 2 ) = MAX( hdual_cast( real(AEROMODE_MINM2( 2 ),8) ), Y  )
 
 C *** Coarse mode: no change because coagulation of coarse particles
 C     is neglected in current model version.
@@ -2131,7 +2135,7 @@ C     H2O_NEW : Water [mol/m^3] content at new time step
  
 C-----------------------------------------------------------------------
 
-	use HDMod 
+	  use HDMod 
       IMPLICIT NONE
 
 C Parameters:
@@ -2153,7 +2157,7 @@ C Local Variables:
       TYPE(hyperdual) :: X, Y
       TYPE(hyperdual) :: CONC( NCMP )    ! concentration (mol/m^3)
       TYPE(hyperdual) :: CONCR( NPAIR )  ! concentration (mol/m^3) ion "pairs" 
-      TYPE(hyperdual) :: M0I( NPAIR )    ! single-solute molalities
+      REAL( 8 ) :: M0I( NPAIR )    ! single-solute molalities
       INTEGER :: J
 
 C-----------------------------------------------------------------------
@@ -2460,8 +2464,11 @@ C-----------------------------------------------------------------------
 
 C Arguments
       TYPE(hyperdual), INTENT( IN )  :: RHIN
-      TYPE(hyperdual), INTENT( OUT ) :: M0I( NPAIR )
-
+    
+    ! Find M0I and put in 23 here. J.E.L. 
+    
+      REAL( 8 ),       INTENT( OUT ) :: M0I( 23 )
+    
       INTEGER IZ
 
 C Location in pure molality array (function of RH)
@@ -2471,9 +2478,11 @@ C force convert for IZ here
 
 C Default value
       M0I = 1.0D+5   ! array assignment
-
+	  
+	  
 C Actual values (10,11 not provided)
-      M0I( 01 ) = AWSC( IZ )  ! NACl
+      M0I( 01 ) = AWSC( IZ )   ! NACl
+      
       M0I( 02 ) = AWSS( IZ )   ! (NA)2SO4
       M0I( 03 ) = AWSN( IZ )   ! NANO3
       M0I( 04 ) = AWAS( IZ )   ! (NH4)2SO4
@@ -2562,12 +2571,12 @@ C     See if any components are negligible (see isocom.for)
          SCP4R = .TRUE.
       END IF
 
-      CONC( : ) = MAX ( CONC( : ), SMALL )
+      CONC( : ) = MAX ( CONC( : ), SMALL  )
 
 C     Deliquescence RH calculations
       DNH42S4 = 0.7997D0
       DNH4NO3 = 0.6183D0
-      IF ( INT( T ) .NE. 298 ) THEN
+      IF ( INT_HDUAL( T ) .NE. 298 ) THEN
          T0      = 298.15D0
          TCF     = 1.0D0 / T - 1.0D0 / T0
          DNH4NO3 = DNH4NO3 * EXP( 852.0D0 * TCF )
@@ -2616,7 +2625,7 @@ C        Adjust DRH of NH4NO3 for low temperature
          DNACL  = 0.7528D0
          DNANO3 = 0.7379D0
          DNH4CL = 0.7710D0
-         IF ( INT( T ) .NE. 298 ) THEN
+         IF ( INT_HDUAL( T ) .NE. 298 ) THEN
             DNACL   = DNACL  * EXP(  25.0D0 * TCF )
             DNANO3  = DNANO3 * EXP( 304.0D0 * TCF )
             DNH4CL  = DNH4Cl * EXP( 239.0D0 * TCF )
@@ -2702,7 +2711,7 @@ C   2. Press, W.H., S.A. Teukolsky, W.T. Vetterling, and B.P.
 C      Flannery, Numerical Recipes in Fortran 77 - 2nd Edition.
 C      Cambridge University Press, 1992.
 
-	use HDMod 
+	  use HDMod 
       IMPLICIT NONE
 
       TYPE(hyperdual) NI, NJ, DGNI, DGNJ, XLSGI, XLSGJ, SQRT2
@@ -2725,12 +2734,12 @@ C *** Calculate quadratic equation coefficients & discriminant
 C *** If roots are imaginary, return a negative GETAF value so that no
 C     mode merging takes place.
       IF ( DISC .LT. 0.0 ) THEN
-         GETAF = - 5.0       ! error in intersection
+         GETAF = - 5.0D0       ! error in intersection
          RETURN
       END IF
 
 C *** Equation 5.6.4 of Press et al.
-      QQ = -0.5 * ( BB + SIGN( 1.0, BB ) * SQRT( DISC ) )
+      QQ = -0.5 * ( BB + SIGN( 1.0D0, BB ) * SQRT( DISC ) )
 
 C *** Return solution of the quadratic equation that corresponds to a
 C     diameter of intersection lying between the median diameters of
@@ -2739,6 +2748,22 @@ C     the 2 modes.
 
       RETURN
       END FUNCTION GETAF
+      
+      
+      
+      TYPE(hyperdual) FUNCTION ERF_APPROX(XX)
+      	
+      	use HDMod 
+      	IMPLICIT NONE
+      	INCLUDE SUBST_CONST
+      	
+      	TYPE(hyperdual)  :: XX
+      	ERF_APPROX  = SIGN( 1.0d0, XX ) * SQRT( 1.0d0 - EXP( -4.0d0 * XX * XX / PI ) )
+      
+      END FUNCTION ERF_APPROX
+      
+      ! Rewrite the statement function in the original AERO_INLET code
+      
 
 C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
       SUBROUTINE AERO_INLET ( DGN, XXLSG, RHOP, fPM1, fPM25, fPM10 )
@@ -2816,14 +2841,14 @@ C-----------------------------------------------------------------------
       INCLUDE SUBST_CONST    ! for PI
 
 C    Input variables
-      REAL   DGN     ! geometric mean Stokes diameter by number [ m ]
-      REAL   XXLSG   ! natural log of geometric standard deviation
-      REAL   RHOP    ! average particle density [ kg/m**3 ]
+      TYPE(hyperdual)   DGN     ! geometric mean Stokes diameter by number [ m ]
+      TYPE(hyperdual)   XXLSG   ! natural log of geometric standard deviation
+      TYPE(hyperdual)   RHOP    ! average particle density [ kg/m**3 ]
 
 C    Output variable
-      REAL, INTENT( OUT ) :: fPM1   ! fraction of particulate volume transmitted through 1
-      REAL, INTENT( OUT ) :: fPM25  ! fraction of particulate volume transmitted through 2
-      REAL, INTENT( OUT ) :: fPM10  ! fraction of particulate volume transmitted through 10
+      TYPE(hyperdual), INTENT( OUT ) :: fPM1   ! fraction of particulate volume transmitted through 1
+      TYPE(hyperdual), INTENT( OUT ) :: fPM25  ! fraction of particulate volume transmitted through 2
+      TYPE(hyperdual), INTENT( OUT ) :: fPM10  ! fraction of particulate volume transmitted through 10
 
 C    Internal variables
       REAL, PARAMETER :: SQRT2 = 1.4142136  !  SQRT( 2 )
@@ -2833,14 +2858,16 @@ C    Internal variables
       REAL, PARAMETER :: B = 0.21470 ! Cunningham slip-correction approx. param [ um ]
                                      ! This factor works well applied to the entire particle size-range
                                      ! The approximation is: Cc(Dp) = 1 + B/Dp
-      REAL D_ST1, D_ST25, D_ST10     ! Stokes diameter equivalent of DCA..
-      REAL DG                        ! DGN converted to [ um ]
-      REAL ERFARG                    ! argument of ERF, from Step#6 of Jiang et al. (2006)
+      TYPE(hyperdual) D_ST1, D_ST25, D_ST10     ! Stokes diameter equivalent of DCA..
+      TYPE(hyperdual) DG                        ! DGN converted to [ um ]
+      TYPE(hyperdual) ERFARG                    ! argument of ERF, from Step#6 of Jiang et al. (2006)
 
 C *** Error function approximation, from Meng & Seinfeld (1994)
-      REAL ERF        ! Error function
-      REAL XX         ! dummy argument for ERF
-      ERF( XX )  = SIGN( 1.0, XX ) * SQRT( 1.0 - EXP( -4.0 * XX * XX / PI ) ) ! THIS IS A STATEMENT FUNCTION, WON'T WORK WITH 
+      ! Comment these out, wrote ERF_APPROX to replace the statement function
+      
+      !REAL ERF        ! Error function
+      !REAL XX         ! dummy argument for ERF
+      !ERF( XX )  = SIGN( 1.0, XX ) * SQRT( 1.0 - EXP( -4.0 * XX * XX / PI ) ) ! THIS IS A STATEMENT FUNCTION, WON'T WORK WITH 
 
 C ----------------------- Begin solution -------------------------------
 
@@ -2851,11 +2878,11 @@ C     Cutoffs
       ! Convert size cut to equivalent Stokes diameter using
       ! equation 2 of Jiang et al. (2006). Note: the equation in Step 5
       ! of this paper has a typo (i.e., eq. 2 is correct).
-      D_ST1  = 0.5 * ( SQRT( B ** 2 + 4.0 * D_AD1 *
+      D_ST1  = 0.5D0 * ( SQRT( B ** 2 + 4.0 * D_AD1 *
      &                     ( D_AD1 + B ) * 1.0E+03 / RHOP ) - B )
-      D_ST25 = 0.5 * ( SQRT( B ** 2 + 4.0 * D_AD25 *
+      D_ST25 = 0.5D0 * ( SQRT( B ** 2 + 4.0 * D_AD25 *
      &                     ( D_AD25 + B ) * 1.0E+03 / RHOP ) - B )
-      D_ST10 = 0.5 * ( SQRT( B ** 2 + 4.0 * D_AD10 *
+      D_ST10 = 0.5D0 * ( SQRT( B ** 2 + 4.0 * D_AD10 *
      &                     ( D_AD10 + B ) * 1.0E+03 / RHOP ) - B )
 
       ! Calculate mass fraction with Dca < SizeCut, using ERF approximation
@@ -2947,7 +2974,7 @@ C    Output variable
 
 C    Internal variables
       REAL, PARAMETER :: SQRT2 = 1.4142136    !  SQRT( 2 )
-      REAL, PARAMETER :: DGMIN = 1.0E-9       !  min(Dp) in [m]
+      REAL( 8 ), PARAMETER :: DGMIN = 1.0D-9       !  min(Dp) in [m]
       REAL, PARAMETER :: ONETHIRD = 1.0 / 3.0
       REAL, PARAMETER :: TWOTHIRDS = 2.0 * ONETHIRD
 
@@ -2956,19 +2983,22 @@ C    Internal variables
       TYPE(hyperdual) XXLSG                     ! ln(StndDev) for current mode
       TYPE(hyperdual) M3_DRY, M2_DRY, M3SUBT, M_WET, M_DRY, DRY_DENS, DENSFAC
       TYPE(hyperdual) XFSUM, LXFM2, L2SG, ES36
-      TYPE(hyperdual) DBlo_st, DBhi_st, LOG_HILO, LOG_LOHI, LOG_HI, LOG_LO
+      TYPE(hyperdual) DBlo_st, DBhi_st, LOG_HI, LOG_LO
+      REAL            LOG_HILO, LOG_LOHI
       TYPE(hyperdual) SQRT2LSG, TERM1, TERM2, TERM3, TERM4, TERM5
+      TYPE(hyperdual) ERF_APPROX
 
 C *** Error function approximation, from Meng & Seinfeld (1994)
-      TYPE(hyperdual) ERF        ! Error function
-      TYPE(hyperdual) XX         ! dummy argument for ERF
-      ERF( XX )  = SIGN( 1.0, XX ) * SQRT( 1.0 - EXP( -4.0 * XX * XX / PI ) )
+C *** Commented out, rewrite the statement function as ERF_APPROX
+      ! TYPE(hyperdual) ERF        ! Error function
+      ! TYPE(hyperdual) XX         ! dummy argument for ERF
+      ! ERF( XX )  = SIGN( 1.0, XX ) * SQRT( 1.0 - EXP( -4.0 * XX * XX / PI ) )
 
 C ----------------------- Begin solution -------------------------------
 
 C *** First Calculate Parameters of Dry Distribution since this is more
 C     applicable in general to AMS measurements.
-      M3SUBT = ( 1.0E-9 * F6PI / RHO_H2O ) * M_H2O        ! m3 m-3
+      M3SUBT = ( 1.0E-9 * F6PI / RHO_H2O ) * M_H2O        ! m3 m-3cd
       M3_DRY = Max(M3_WET - M3SUBT, 0.0) + TINY(0.0)   ! m3 m-3 
       M2_DRY = M2_WET * ( M3_DRY / M3_WET ) ** TWOTHIRDS  ! m2 m-3
 
@@ -2993,7 +3023,7 @@ C     applicable in general to AMS measurements.
 C *** Calculate Transmission Fractions for AMS with Vacuum Aerodynamic
 C     Cutoffs. This approximation is split into a piecewise function (see
 C     Appendix B in Ensberg et al., 2013).
-      fAMS = 0.0
+      fAMS = 0.0D0
       DENSFAC = 1.0E+03 / DRY_DENS  ! Density Correction Factor
                                     !   = rho0 / rho
                                     !   = 1000.0 / rho
@@ -3008,8 +3038,8 @@ C     Appendix B in Ensberg et al., 2013).
       LOG_LO   = LOG( DBlo_st/DGv )
 
       TERM1 = LOG( DGv/DBlo_st ) / LOG_HILO
-      TERM2 =  ERF( LOG_HI / SQRT2LSG )
-     &        -ERF( LOG_LO / SQRT2LSG )
+      TERM2 =  ERF_APPROX( LOG_HI / SQRT2LSG )
+     &        -ERF_APPROX( LOG_LO / SQRT2LSG )
       TERM3 = XXLSG / ( LOG_HILO * (pi/2.0) ** 0.5 )
       TERM4 = EXP( -1.0 * ( LOG_LO / SQRT2LSG ) ** 2 )
       TERM5 = EXP( -1.0 * ( LOG_HI / SQRT2LSG ) ** 2 )
@@ -3020,8 +3050,8 @@ C     Appendix B in Ensberg et al., 2013).
       DBlo_st = DBhi_st         ! Stokes Lower Bound [um]
       DBhi_st = 0.55 * DENSFAC  ! Stokes Upper Bound [um]
 
-      TERM1 = ERF( LOG( DBhi_st/DGv ) / SQRT2LSG )
-      TERM2 = ERF( LOG( DBlo_st/DGv ) / SQRT2LSG )
+      TERM1 = ERF_APPROX( LOG( DBhi_st/DGv ) / SQRT2LSG )
+      TERM2 = ERF_APPROX( LOG( DBlo_st/DGv ) / SQRT2LSG )
       fAMS = fAMS +  (TERM1 - TERM2)
 
       ! Third Piece of Function [T(%) = 1.0 - 0.6805 * (Dva - 0.55) ]
@@ -3033,8 +3063,8 @@ C     Appendix B in Ensberg et al., 2013).
       LOG_LO   = LOG( DBlo_st/DGv )
 
       TERM1 = LOG( DGv/DBhi_st ) / LOG_LOHI
-      TERM2 =  ERF( LOG_HI / SQRT2LSG )
-     &        -ERF( LOG_LO / SQRT2LSG )
+      TERM2 =  ERF_APPROX( LOG_HI / SQRT2LSG )
+     &        -ERF_APPROX( LOG_LO / SQRT2LSG )
       TERM3 = XXLSG / ( LOG_LOHI * (pi/2.0) ** 0.5 )
       TERM4 = EXP( -1.0 * ( LOG_LO / SQRT2LSG ) ** 2 )
       TERM5 = EXP( -1.0 * ( LOG_HI / SQRT2LSG ) ** 2 )
@@ -3148,8 +3178,8 @@ C  Called by: Gas-Phase Chemistry Driver
       USE AERO_DATA
       USE AEROMET_DATA, ONLY: pi
       USE GRID_CONF, ONLY: NLAYS, NROWS, NCOLS
-
-	use HDMod 
+	  use HDMod 
+	  
       IMPLICIT NONE
       
       TYPE(hyperdual), POINTER   :: CGRID ( :,:,:,: )  ! pointer to model concentrations
@@ -3181,7 +3211,7 @@ C  Called by: Gas-Phase Chemistry Driver
                ! Assume standard deviation is fixed.
                M2DRY_FINAL( : ) = CHEM_M2DRY_INIT( C,R,L,: )  
      &             * ( M3DRY_FINAL( : ) 
-     &             / CHEM_M3DRY_INIT( C,R,L,: ) )  ** TWOTHIRDS
+     &             / CHEM_M3DRY_INIT( C,R,L,: ) ) ** TWOTHIRDS
 
                ! Update the Aerosol Surface Area making sure to multiply
                ! the 2nd moment by Pi to convert properly
@@ -3196,4 +3226,7 @@ C  Called by: Gas-Phase Chemistry Driver
 
       END SUBROUTINE HETCHEM_UPDATE_AERO
 C
+
+
+
  

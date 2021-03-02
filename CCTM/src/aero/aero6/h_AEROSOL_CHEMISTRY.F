@@ -402,8 +402,8 @@ C-----------------------------------------------------------------------
 
 C *** Arguments
       TYPE(hyperdual),           POINTER       :: CGRID ( :,:,:,: )  ! pointer of model concentrations
-      REAL( 8 ),                 INTENT( IN )  :: TEMP  ( :,:,: )    ! temperature [K]
-      REAL( 8 ),                 INTENT( IN )  :: PRESS ( :,:,: )    ! pressure [Pa]
+      TYPE(hyperdual),           INTENT( IN )  :: TEMP  ( :,:,: )    ! temperature [K]
+      TYPE(hyperdual),           INTENT( IN )  :: PRESS ( :,:,: )    ! pressure [Pa]
       TYPE(hyperdual),           INTENT( IN )  :: WVAPOR( :,:,: )    ! water vapor mass mixing ratio(Kg/Kg air)
       TYPE(hyperdual), OPTIONAL, INTENT( IN )  :: DENS ( :,:,: )     ! air density(Kg/m3 air)
 
@@ -448,21 +448,21 @@ C *** Parameters
       REAL( 8 ), PARAMETER :: STD_DIFF_HI     = 0.1045D-4    ! HI molecular diffusivity at 101325 Pa and 273.15 K [m2/sec] 
 
 !     REAL,      PARAMETER :: GPKG        = 1.0E+03                      ! g/kg unit conversion
-      REAL( 8 ), PARAMETER :: CFACTOR     = 8.0D0 * GPKG  * RGASUNIV / PI  ! factor in cbar_coeff
-      REAL( 8 ), PARAMETER :: PA2ATM      = 1.0D0 / STDATMPA               ! Pascal to atm conv fac
-      REAL( 8 ), PARAMETER :: WMASS2PPM   = 1.0D6 * MWAIR / MWWAT        ! H20 mixing ratio to ppm
-      REAL( 8 ), PARAMETER :: MAOMV       = MWAIR / MWWAT
-      REAL( 8 ), PARAMETER :: CONCOFM     = 1.0D+06        ! conc. of M = 1E+06 ppm
-      REAL( 8 ), PARAMETER :: INV_STDTEMP = 1.0 / STDTEMP
-      REAL( 8 ), PARAMETER :: EPSWATER    = MWWAT / MWAIR
+      REAL,      PARAMETER :: CFACTOR     = 8.0 * GPKG  * RGASUNIV / PI  ! factor in cbar_coeff
+      REAL,      PARAMETER :: PA2ATM      = 1.0 / STDATMPA               ! Pascal to atm conv fac
+      REAL,      PARAMETER :: WMASS2PPM   = 1.0E6 * MWAIR / MWWAT        ! H20 mixing ratio to ppm
+      REAL,      PARAMETER :: MAOMV       = MWAIR / MWWAT
+      REAL,      PARAMETER :: CONCOFM     = 1.0E+06        ! conc. of M = 1E+06 ppm
+      REAL,      PARAMETER :: INV_STDTEMP = 1.0 / STDTEMP
+      REAL,      PARAMETER :: EPSWATER    = MWWAT / MWAIR
 C *** parameters for heterogeneous hydrolysis of NTR2
-      REAL( 8 ), PARAMETER :: ON_ALPHA1   = 0.34d0,     ! Organic nitrate (ON) partitioning parameters
-     &                        ON_ALPHA2   = 0.66d0,     ! based on Rollins et al., 2013
-     &                        ON_CSTAR1   = 0.73d0,
-     &                        ON_CSTAR2   = 1000.0d0
+      REAL,      PARAMETER :: ON_ALPHA1   = 0.34,     ! Organic nitrate (ON) partitioning parameters
+     &                        ON_ALPHA2   = 0.66,     ! based on Rollins et al., 2013
+     &                        ON_CSTAR1   = 0.73,
+     &                        ON_CSTAR2   = 1000.0
 
-      REAL( 8 ), PARAMETER :: MIN_TOA     = 0.0001d0       ! Min. conc. of total OA for partitioning to occur [ug/m3]
-      REAL( 8 ), PARAMETER :: KHON        = 2.7778D-03   ! heterogeneous ON hydrolysis rate [1/min] ~ 4/day
+      REAL,      PARAMETER :: MIN_TOA     = 0.0001       ! Min. conc. of total OA for partitioning to occur [ug/m3]
+      REAL,      PARAMETER :: KHON        = 2.7778E-03   ! heterogeneous ON hydrolysis rate [1/min] ~ 4/day
 
 C *** Local Variables
       TYPE(hyperdual)    :: AIRTEMP          ! air temperature [K]
@@ -1936,10 +1936,10 @@ C     as a percentage.
 
 C *** Check whether the ambient RH is below the crystallization RH for
 C     the given inorganic particle composition.
-            CRYSTAL = CRYSTALIZED( real(RH), .TRUE. )
+            CRYSTAL = CRYSTALIZED( real_hdual(RH), .TRUE. )
 
 C *** Check whether the ambient RH exceeds the RH of ice formation.
-            FROZEN = FREEZES( real(TEMP), real(RH) )
+            FROZEN = FREEZES( real_hdual(TEMP), real_hdual(RH) )
       
             IF ( FROZEN ) THEN
 C *** Set N2O5_GAMMA to constant value if particles contain ice, based on

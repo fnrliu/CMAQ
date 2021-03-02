@@ -33,6 +33,9 @@ C   18 Jul 14 B.Hutzell: revised to use real(8) variables for solution
 C*************************************************************************
 
 c..EBI solver fixed parameters
+
+	  use HDMod
+	  
       INTEGER, PARAMETER    ::  NEBITER       = 1000      ! No. of iterations for EBI
       INTEGER, PARAMETER    ::  MAX_CELLS_EBI = 1         ! max # cells in local conc arrays
       REAL( 8 ), PARAMETER  ::  DELTAT        = 2.500D+00 ! EBI time step (min)
@@ -91,11 +94,15 @@ c...Allocatable arrays
       REAL( 8 ), ALLOCATABLE ::  PNEG(  : )! Negative production rates
 
       REAL, ALLOCATABLE      :: PRES( :, :, : )          ! pressure (Pa)
+      TYPE(hyperdual), ALLOCATABLE :: PRES_HD(:,:,:)     ! pressure, in hyperdual
       REAL, ALLOCATABLE      :: QV  ( :, :, : )          ! water vapor (Kg/Kg air)
+      TYPE(hyperdual), ALLOCATABLE :: QV_HD(:,:,:)       ! water vapor (kg/kg air), in hd
       REAL, ALLOCATABLE      :: TA  ( :, :, : )          ! temperature (K)
+      TYPE(hyperdual), ALLOCATABLE :: TA_HD(:,:,:)       ! temperature, in hd
 
       REAL, ALLOCATABLE      :: SEAICE ( :, :)            ! fractional seaice cover, [-]
       REAL, ALLOCATABLE      :: DENS( :, :, : )           ! mass density (Kg/m^3)
+      TYPE(hyperdual), ALLOCATABLE :: DENS_HD(:,:,:)      ! mass density, in hd
 
       LOGICAL, ALLOCATABLE   :: LAND_ZONE   ( :,: )       ! Is the surface totally land?
       LOGICAL, ALLOCATABLE   :: LFLAGIRR    ( :,:,: )     ! Conduct IRR for cell
@@ -105,7 +112,8 @@ c...Allocatable arrays
       REAL( 8 ), ALLOCATABLE ::  H2O     ( : )     ! Cell H2O mixing ratio (ppmV)
       REAL( 8 ), ALLOCATABLE ::  TEMP    ( : )     ! Cell Temperature
       REAL( 8 ), ALLOCATABLE ::  DENSITY ( : )     ! Cell mass density (Kg/m3)
-      REAL( 8 ), ALLOCATABLE ::  HET     ( :, : )  ! cell heterogeneous reaction rates
+!     REAL( 8 ), ALLOCATABLE ::  HET     ( :, : )  ! cell heterogeneous reaction rates
+      TYPE(hyperdual), ALLOCATABLE :: HET( :, : )
       REAL( 8 ), ALLOCATABLE ::  RJIN    ( :, : )  ! J-values for a cell
       LOGICAL, ALLOCATABLE   ::  LAND    ( : )     ! land_zone value for specific cell
 

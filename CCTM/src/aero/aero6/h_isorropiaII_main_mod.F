@@ -418,7 +418,7 @@ c #endif
       ! /ZSR/ is read-only and doesn't have to be declared THREADPRIVATE
       ! block does not need to be split up to speed compilation
       integer, parameter              :: DP_hd = KIND(1.d0)
-      Real(DP_hd  ) :: AWAS(NZSR), AWSS(NZSR), AWAC(NZSR), AWSC(NZSR)
+      Real(kind=fp) :: AWAS(NZSR), AWSS(NZSR), AWAC(NZSR), AWSC(NZSR)
       Real(kind=fp) :: AWAN(NZSR), AWSN(NZSR), AWSB(NZSR), AWAB(NZSR)
       Real(kind=fp) :: AWSA(NZSR), AWLC(NZSR), AWCS(NZSR), AWCN(NZSR)
       Real(kind=fp) :: AWCC(NZSR), AWPS(NZSR), AWPB(NZSR), AWPN(NZSR)

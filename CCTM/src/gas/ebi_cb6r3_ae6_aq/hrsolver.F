@@ -232,36 +232,36 @@ c++++++++++++++++++++++++Debug section++++++++++++++++++++++++++++++++++
       END DO
 
 ! Initial PA_IRR
-      IF( CALL_IRR ) CALL PA_IRR ( .TRUE., RKI, YC, DTC )
-      TSTEP_EBI: DO    ! EBI time-step loop
-
-         SUBSTEP_EBI: DO NINR = 1, N_INR_STEPS   ! time substeps loop
-!  first attempt is sub time-step equals EBI time-step
-
-            IF( LEBI_CONV ) FORALL( S = 1:NUMB_MECH_SPC )YC0( S ) = YC( S )   ! Set ICs for EBI iterations
-
-            ITER_SUBSTEP: DO ITER = 1, NEBITER  ! iteration loop solving for sub time-step
-
-
-               N_EBI_IT = N_EBI_IT + 1
-               CALL HRRATES
-
-c++++++++++++++++++++++++Debug section++++++++++++++++++++++++++++++++++
-#ifdef hrdebug
-               IF( LDEBUG ) THEN
-                  WRITE( DBGOUT, '( A, I5 )' ) 'ITER NO ', ITER
-                  WRITE( DBGOUT, '( A, F12.5 )' )
-     &               ' DTC=', DTC
-
-                  IF( ITER .EQ. 1 ) THEN
-                     WRITE( DBGOUT, '( A )' ) 'Starting reaction rates'
-                     DO N = 1, N_RXNS
-                        WRITE( DBGOUT, '( A, I3, 1X, 1PD13.5 )' )
-     &                        'RXRAT ', N, RXRAT( NCELL, N )
-                     END DO
-                  END IF
-               END IF
-#endif
+C     IF( CALL_IRR ) CALL PA_IRR ( .TRUE., RKI, YC, DTC )
+C     TSTEP_EBI: DO    ! EBI time-step loop
+C
+C        SUBSTEP_EBI: DO NINR = 1, N_INR_STEPS   ! time substeps loop
+C!  first attempt is sub time-step equals EBI time-step
+C
+C           IF( LEBI_CONV ) FORALL( S = 1:NUMB_MECH_SPC )YC0( S ) = YC( S )   ! Set ICs for EBI iterations
+C
+C           ITER_SUBSTEP: DO ITER = 1, NEBITER  ! iteration loop solving for sub time-step
+C
+C
+C              N_EBI_IT = N_EBI_IT + 1
+C              CALL HRRATES
+C
+Cc++++++++++++++++++++++++Debug section++++++++++++++++++++++++++++++++++
+C#ifdef hrdebug
+C              IF( LDEBUG ) THEN
+C                 WRITE( DBGOUT, '( A, I5 )' ) 'ITER NO ', ITER
+C                 WRITE( DBGOUT, '( A, F12.5 )' )
+C    &               ' DTC=', DTC
+C
+C                 IF( ITER .EQ. 1 ) THEN
+C                    WRITE( DBGOUT, '( A )' ) 'Starting reaction rates'
+C                    DO N = 1, N_RXNS
+C                       WRITE( DBGOUT, '( A, I3, 1X, 1PD13.5 )' )
+C    &                        'RXRAT ', N, RXRAT( NCELL, N )
+C                    END DO
+C                 END IF
+C              END IF
+C#endif
 c++++++++++++++++++++++++Debug section++++++++++++++++++++++++++++++++++
 
 

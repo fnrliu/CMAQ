@@ -105,12 +105,12 @@ set make_options = "-j"                #> additional options for make command if
                                             #>     (see $CMAQ_MODEL/CCTM/src/spcs)
  set ModPhot   = phot/inline                #> photolysis calculation module 
                                             #>     (see $CMAQ_MODEL/CCTM/src/phot)
- set Mechanism = cb6r3_ae7_aq               #> chemical mechanism (see $CMAQ_MODEL/CCTM/src/MECHS)
+ set Mechanism = cb6r3_ae6_aq               #> chemical mechanism (see $CMAQ_MODEL/CCTM/src/MECHS)
  set ModGas    = gas/ebi_${Mechanism}       #> gas-phase chemistry solver (see $CMAQ_MODEL/CCTM/src/gas)
                                             #> use gas/ros3 or gas/smvgear for a solver independent 
                                             #  of the photochemical mechanism
- set ModAero   = aero/aero7                 #> aerosol chemistry module (see $CMAQ_MODEL/CCTM/src/aero)
- set ModCloud  = cloud/acm_ae7              #> cloud chemistry module (see $CMAQ_MODEL/CCTM/src/cloud)
+ set ModAero   = aero/aero6                 #> aerosol chemistry module (see $CMAQ_MODEL/CCTM/src/aero)
+ set ModCloud  = cloud/acm_ae6              #> cloud chemistry module (see $CMAQ_MODEL/CCTM/src/cloud)
                                             #>   overwritten below if using cb6r3m_ae7_kmtbr mechanism
  set ModUtil   = util/util                  #> CCTM utility modules
  set ModDiag   = diag                       #> CCTM diagnostic modules

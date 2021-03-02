@@ -77,8 +77,8 @@
          INTEGER  :: LEN
          INTEGER,         ALLOCATABLE :: REF( : )
          CHARACTER( 16 ), ALLOCATABLE :: NAME( : )
-         real,  ALLOCATABLE :: FACNUM( :,: )
-         real,  ALLOCATABLE :: FACSRF( :,: )
+         REAL,            ALLOCATABLE :: FACNUM( :,: )
+         REAL,            ALLOCATABLE :: FACSRF( :,: )
       END TYPE EM_STREAM_MODES
       TYPE( EM_STREAM_MODES ), ALLOCATABLE :: EM_STREAM_SIZE( : )
  

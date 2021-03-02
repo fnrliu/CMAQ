@@ -71,8 +71,8 @@ C**********************************************************************
 #endif
       USE HRDATA
       USE PHOT_MOD, Only: INIT_PHOT_SHARED, RJ     ! photolysis rate, in-line module
-      USE PA_DEFN, Only: LIRR                      ! Process Analysis control and data variable
-      USE PA_IRR_CLT
+C     USE PA_DEFN, Only: LIRR                      ! Process Analysis control and data variable
+C     USE PA_IRR_CLT
       USE DEGRADE_SETUP_TOX, ONLY : N_REACT, RXTANT_MAP
       USE CENTRALIZED_IO_MODULE, ONLY : INTERPOLATE_VAR, OCEAN, SZONE
 
@@ -202,12 +202,12 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
          ELSE
            L_AQ_VRSN = .FALSE.
          END IF
-
-         IF( LIRR ) THEN
-            CALL_IRR = .TRUE.
-         ELSE
+C
+C        IF( LIRR ) THEN
+C           CALL_IRR = .TRUE.
+C        ELSE
             CALL_IRR = .FALSE.
-         END IF
+C        END IF
 
          MODEL_SPECIES = NSPCSD    ! WTH: find number of model species
 
@@ -435,7 +435,7 @@ c..Get rate constants
                FORALL( NPH = 1:NPHOTAB ) RJIN( NCELL,NPH ) = REAL( RJ( C,R,L,NPH ), 8)
                IF( MAXVAL(RJIN) .GT. 0.0D0 ) LSUNLIGHT = .TRUE.
 
-               FORALL ( NPH = 1:NHETERO )HET( NCELL,NPH ) = REAL( KHETERO( NPH,C,R,L ), 8)
+               FORALL ( NPH = 1:NHETERO )HET( NCELL,NPH ) =  KHETERO( NPH,C,R,L )
 
                CALL CALC_RCONST( TEMP, ATMPRES, H2O, RJIN, HET, LSUNLIGHT, LAND, RKI_SAV, NCELL )
                FORALL( NPH = 1:NRXNS )RKI( NPH ) = RKI_SAV( NCELL, NPH )

@@ -305,7 +305,13 @@ C Local Variables:
          INTEGER          C, R, L, N, S, V, ISTR, ISRM, NL ! loop induction variables
          INTEGER          S_STRT, S_END ! substitute loop induction variables
          REAL, ALLOCATABLE, SAVE :: VDEMIS_READ  ( :,:,:,: ) ! Emissions as they are provided by each stream
+         
+         TYPE(hyperdual), ALLOCATABLE, SAVE :: VDEMIS_READ_HD (:,:,:,:) ! For DUSTOUTM J.E.L. 
+         
          REAL, ALLOCATABLE, SAVE :: VDEMIS_SCALED( :,:,:,: ) ! Emissions after user scaling, and spatial scaling
+         
+         TYPE(hyperdual), ALLOCATABLE, SAVE :: VDEMIS_SCALED_HD(:,:,:,:) ! For DUSTOUTM J.E.L. 
+         
          REAL, ALLOCATABLE, SAVE :: VDEMIS_CONV  ( :,:,:,: ) ! Emissions after converting to units for VDIFF
          
 
@@ -557,15 +563,16 @@ C Retrieve Emissions from All Stream Types
                CALL EMISS_SCALING( VDEMIS_READ, ISRM, NL, VDEMIS_SCALED )
                CALL EMISS_SIZE_DIST( ISRM, VDEMIS_SCALED, NL )
 
+             ! Changed by J.E.L. for testing AERO HD 
              ! Retrieve Wind-Blown Dust Emissions 
              CASE ( 8 )
                NL = 1
                CALL GET_DUST_EMIS ( JDATE, JTIME, TSTEP, Met_data%RJACM( :,:,1 ), CELLHGT( 1 ) )
                FORALL( ISTR = 1:N_EMIS_ISTR, MAP_EMtoSURR( ISTR,ISRM ) .GT. 0 )
-                  VDEMIS_READ( ISTR,1,:,: ) = DUSTOUTM( MAP_EMtoSURR( ISTR,ISRM ),:,: ) 
+                  VDEMIS_READ_HD( ISTR,1,:,: ) = DUSTOUTM( MAP_EMtoSURR( ISTR,ISRM ),:,: ) 
                END FORALL
-               CALL EMISS_SCALING( VDEMIS_READ, ISRM, NL, VDEMIS_SCALED )
-               CALL EMISS_SIZE_DIST( ISRM, VDEMIS_SCALED, NL )
+               CALL EMISS_SCALING_HD( VDEMIS_READ_HD, ISRM, NL, VDEMIS_SCALED_HD )
+               CALL EMISS_SIZE_DIST_HD( ISRM, VDEMIS_SCALED_HD, NL )
 
            END SELECT
            
@@ -2982,6 +2989,169 @@ C stkemis_init.
 
 
       END SUBROUTINE OPEN_EMISS_DIAG
+
+
+C-----------------------------------------------------------------------
+      SUBROUTINE EMISS_SCALING_HD( VDEMIS0, ISRM, NL, VDEMIS )
+
+C     Apply region-dependent scaling of emissions rules.
+C-----------------------------------------------------------------------
+          
+      IMPLICIT NONE
+
+      INTEGER, INTENT( IN )   :: ISRM, NL
+      TYPE(hyperdual), INTENT( IN )      :: VDEMIS0( :,:,:,: )
+      TYPE(hyperdual), INTENT( OUT )     :: VDEMIS ( :,:,:,: )
+      REAL, ALLOCATABLE, SAVE :: FAC1( :,:,:,: )
+      INTEGER, ALLOCATABLE, SAVE :: NFAC( : )
+
+      TYPE FAC_ST
+          LOGICAL :: EXISTS  ! Does this source have any instructions with 
+                             ! at least IFAC number of factors
+          REAL, ALLOCATABLE    :: FAC( :,:,:,: ) ! Spatial-Dependent Scaling Factors 
+          INTEGER              :: NISTR          ! Number of nonzero instructions for each stream
+          INTEGER, ALLOCATABLE :: MAP_FACtoISTR( : )! Map the factors from the global 
+                                                    ! structure to just the species 
+                                                    ! relevant for this emission stream
+      END TYPE FAC_ST
+      TYPE ( FAC_ST ), ALLOCATABLE, SAVE :: EM_FAC1_ST( : )
+
+      INTEGER ISTR, IFAC, L, NFAC_MAX, IRGN, OP, JSRM, ISTR_TMP, NISTR, III
+      INTEGER, ALLOCATABLE :: MAP_FACtoISTR( : )
+      REAL   FAC
+      LOGICAL, SAVE :: FIRSTIME = .TRUE.
+
+
+      IF ( FIRSTIME ) THEN
+         FIRSTIME = .FALSE.
+         ALLOCATE( NFAC( N_EMIS_ISTR ) )
+
+         ! Build Array for primary factor. This algorithm is optimized
+         ! by assuming that most instructions only have one factor (i.e.
+         ! the 'add' factor). So time will be saved by pre-populating
+         ! the 5D array necessry to perform this operation.
+         ALLOCATE( EM_FAC1_ST( N_EM_SRM ) )
+         EM_FAC1_ST( : )%EXISTS = .FALSE.
+         ALLOCATE( FAC1( N_EMIS_ISTR,EMLAYS,NCOLS,NROWS ) )
+         ALLOCATE( MAP_FACtoISTR( N_EMIS_ISTR ) )
+
+         DO JSRM = 1,N_EM_SRM
+           NFAC( : ) = EM_FAC_ST( :,JSRM )%LEN
+           IF ( ANY( NFAC( : ) .GE. 1 ) ) THEN
+             ! Start Counting Instructions for this Emission Stream    
+             FAC1 = 0.0
+             ISTR_TMP = 0
+             MAP_FACtoISTR = 0
+
+             ! Loop through existing instructions
+             DO ISTR = 1,N_EMIS_ISTR
+               ! Determine whether Emissions for this combination exist
+               IF ( EM_FAC_ST( ISTR,JSRM )%LEN .GT. 0 ) THEN
+                 IRGN = EM_FAC_ST( ISTR,JSRM )%REG( 1 )
+                 ISTR_TMP = ISTR_TMP + 1
+                 MAP_FACtoISTR( ISTR_TMP ) = ISTR
+
+                 DO L = 1,EMLAYS
+                   IF ( IRGN .EQ. 1 ) THEN
+                     ! Emissions are domain wide
+                     FAC1( ISTR_TMP,L,:,: ) = EM_FAC_ST( ISTR,JSRM )%FAC( 1 )
+                   ELSE
+                     ! Regional-based scaling
+                     FAC1( ISTR_TMP,L,:,: ) = EM_FAC_ST( ISTR,JSRM )%FAC( 1 )
+     &                            * EM_REG_FAC( :,:,IRGN )
+                   END IF
+                 END DO
+               END IF
+             END DO
+
+             ! Allocate factor array for the first factor
+             EM_FAC1_ST( JSRM )%EXISTS = .TRUE.
+             EM_FAC1_ST( JSRM )%NISTR = ISTR_TMP
+             ALLOCATE( EM_FAC1_ST( JSRM )%FAC( ISTR_TMP,EMLAYS,NCOLS,NROWS ) )
+             EM_FAC1_ST( JSRM )%FAC( 1:ISTR_TMP,:,:,: ) = FAC1( 1:ISTR_TMP,:,:,: )
+             ALLOCATE( EM_FAC1_ST( JSRM )%MAP_FACtoISTR( ISTR_TMP ) )
+             EM_FAC1_ST( JSRM )%MAP_FACtoISTR( 1:ISTR_TMP ) = MAP_FACtoISTR( 1:ISTR_TMP )
+           
+           END IF 
+         END DO
+         DEALLOCATE( MAP_FACtoISTR )
+
+      END IF   ! First Time
+
+      !! Time-Dependent Portion
+      VDEMIS( :,1:NL,:,: ) = 0.0d0
+      
+      ! Skip Streams With no Emissions Whatsoever
+      IF ( .NOT. EM_FAC1_ST( ISRM )%EXISTS ) RETURN
+
+      ! For the Primary Scaling (IFAC = 1), apply the array operation
+      NISTR = EM_FAC1_ST( ISRM )%NISTR
+      ALLOCATE( MAP_FACtoISTR( NISTR ) )
+      MAP_FACtoISTR = EM_FAC1_ST( ISRM )%MAP_FACtoISTR
+
+
+	 DO III = 1, NISTR 
+	 	VDEMIS(III,1:NL,:,:) = VDEMIS0(III,1:NL,:,:) * EM_FAC1_ST(ISRM)%FAC(III,1:NL,:,:)
+	 ENDDO 
+C    VDEMIS( MAP_FACtoISTR,1:NL,:,: ) = VDEMIS0( MAP_FACtoISTR,1:NL,:,: ) * 
+C    &        EM_FAC1_ST( ISRM )%FAC( 1:NISTR,1:NL,:,: )
+
+      
+      ! For Additional Scaling Operations (IFAC > 1), Loop through Instructions 
+      NFAC( : ) = EM_FAC_ST( :,ISRM )%LEN
+      DO ISTR = 1,N_EMIS_ISTR
+        ! Do Not bother with this row if there is no surrogate to map
+        IF ( MAP_EMtoSURR( ISTR,ISRM ) .EQ. 0 .OR. NFAC( ISTR ) .EQ. 1 ) CYCLE
+
+        DO IFAC = 2,NFAC( ISTR )      
+
+          FAC  = EM_FAC_ST( ISTR,ISRM )%FAC( IFAC )
+          OP   = EM_FAC_ST( ISTR,ISRM )%OP ( IFAC )
+          IRGN = EM_FAC_ST( ISTR,ISRM )%REG( IFAC )
+
+          IF ( IRGN .EQ. 1 ) THEN
+            !Apply scaling using EM_FAC_ST 
+            IF ( OP .EQ. 1 .AND. NFAC( ISTR ) .EQ. 1 ) THEN ! Add New Emission
+                VDEMIS( ISTR,1:NL,:,: ) = VDEMIS0( ISTR,1:NL,:,: ) * FAC
+            ELSE IF ( OP.EQ.1 ) THEN   ! Add Additional Emission 
+                VDEMIS( ISTR,1:NL,:,: ) = VDEMIS( ISTR,1:NL,:,: ) +
+     &                 VDEMIS0( ISTR,1:NL,:,: ) * FAC
+            ELSE IF ( OP.EQ.2 ) THEN ! Multiply Emissions Rule
+                VDEMIS( ISTR,1:NL,:,: ) = VDEMIS( ISTR,1:NL,:,: ) * FAC
+            ELSE IF ( OP.EQ.3 ) THEN ! Overwrite Existing Rule
+                VDEMIS( ISTR,1:NL,:,: ) = VDEMIS0( ISTR,1:NL,:,: ) * FAC
+            END IF
+          ELSE
+              
+            !Apply scaling using EM_FAC_ST and VDEMIS_RGN
+            IF ( OP.EQ.1 ) THEN   ! Add Additional Emission 
+              DO L = 1,NL
+                VDEMIS( ISTR,L,:,: ) = VDEMIS( ISTR,L,:,: ) +
+     &             VDEMIS0( ISTR,L,:,: ) * FAC * EM_REG_FAC( :,:,IRGN )
+              END DO
+            ELSE IF ( OP.EQ.2 ) THEN ! Multiply Emissions Rule
+              DO L = 1,NL
+                VDEMIS( ISTR,L,:,: ) = VDEMIS( ISTR,L,:,: ) * 
+     &               (1.0 - EM_REG_FAC( :,:,IRGN ) ) +
+     &             VDEMIS( ISTR,L,:,: ) * FAC * EM_REG_FAC( :,:,IRGN )
+              END DO
+            ELSE IF ( OP.EQ.3 ) THEN ! Overwrite Existing Rule
+              DO L = 1,NL
+                VDEMIS( ISTR,L,:,: ) = VDEMIS( ISTR,L,:,: ) *
+     &               (1.0 - EM_REG_FAC( :,:,IRGN ) ) +
+     &             VDEMIS0( ISTR,L,:,: ) * FAC * EM_REG_FAC( :,:,IRGN )
+              END DO
+            END IF
+
+          END IF
+
+        END DO
+      END DO
+
+      RETURN
+
+      END SUBROUTINE EMISS_SCALING_HD
+
 
 
 C-----------------------------------------------------------------------
