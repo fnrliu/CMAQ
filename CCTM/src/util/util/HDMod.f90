@@ -199,6 +199,10 @@ Module HDMod
         interface maxval
           module procedure maxval_hdual_array
         end interface
+
+        interface minval
+          module procedure minval_hdual_4d
+        end interface
   
         interface dot_product
           module procedure &
@@ -5666,6 +5670,27 @@ Module HDMod
             enddo
   
           end function
+
+          !----- Minval
+          function minval_hdual_4d(X_in) result(val_out)
+  
+            implicit none
+            TYPE(hyperdual), dimension(:,:,:,:), intent(in) :: X_in
+            TYPE(hyperdual)                                 :: val_out
+            integer :: i, j, k, l
+  
+            val_out = X_in(1,1,1,1)
+            do i = 1, size(X_in, 1)
+              do j = 1, size(X_in, 2)
+                do k = 1, size(X_in, 3)
+                  do l = 1,size(X_in, 4)
+                    val_out = min(val_out, X_in(i,j,k,l))
+                  enddo
+                enddo 
+              enddo 
+            enddo 
+
+          end function 
   
   
           !----- Matmul

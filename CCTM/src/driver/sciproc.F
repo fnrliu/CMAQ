@@ -120,6 +120,12 @@ C Local Variables:
             REAL, POINTER             :: CGRID( :,:,:,: )
             INTEGER, INTENT( IN )     :: JDATE, JTIME
          END SUBROUTINE CKSUMMER
+         SUBROUTINE CKSUMMER_HD (PRNAME, CGRID_HD, JDATE, JTIME )
+            use HDMod
+            CHARACTER( * ), INTENT( IN ) :: PRNAME
+            TYPE(hyperdual), POINTER     :: CGRID_HD(:,:,:,:)
+            INTEGER, INTENT(IN)          :: JDATE, JTIME
+         END SUBROUTINE CKSUMMER_HD
          SUBROUTINE PA_UPDATE ( PNAME, CGRID, JDATE, JTIME, TSTEP )
             CHARACTER( * ), INTENT( IN ) :: PNAME
             REAL, POINTER             :: CGRID( :,:,:,: )
@@ -305,7 +311,7 @@ C decouple CGRID for cloud and chemistry
 #endif
 
       CALL AERO ( CGRID_HD, JDATE, JTIME, TSTEP )
-      IF ( CKSUM ) CALL CKSUMMER ( 'AERO', CGRID, JDATE, JTIME )
+      IF ( CKSUM ) CALL CKSUMMER_HD ( 'AERO', CGRID_HD, JDATE, JTIME )
       ! IF ( LIPR ) CALL PA_UPDATE_AERO ( CGRID, JDATE, JTIME, TSTEP )
       IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'AERO' )
       IF ( STM ) CALL STM_WRAP_AE ( CGRID_HD, JDATE, JTIME )
