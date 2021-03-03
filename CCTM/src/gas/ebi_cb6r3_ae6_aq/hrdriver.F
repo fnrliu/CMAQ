@@ -278,7 +278,7 @@ C..Initialize shared photolysis data
 
 C..Determine which cells need IRR
          ALLOCATE( LFLAGIRR ( NCOLS, NROWS, NLAYS ) )
-         CALL      PA_IRR_CKCELLS ( LFLAGIRR )
+C        CALL      PA_IRR_CKCELLS ( LFLAGIRR )
 
 #ifdef isam
         NUMB_ISAM_CELLS = 1.0D0 / ( NCOLS * NROWS * NLAYS )
@@ -455,7 +455,7 @@ c..Update concentration array
 #endif
 
 c..update irrout arrays if needed
-               IF ( LFLAGIRR( C,R,L ) )CALL PA_IRR_CELLENDF( C, R, L )
+C              IF ( LFLAGIRR( C,R,L ) )CALL PA_IRR_CELLENDF( C, R, L )
 
             END DO
          END DO

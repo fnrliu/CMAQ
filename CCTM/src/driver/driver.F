@@ -418,7 +418,7 @@ C Initialize stencil exchange
 #endif
 
 C Generate the process analysis data: load PA_DEFN module
-         CALL PA_DATAGEN( )
+C        CALL PA_DATAGEN( )
 
 C Set up horizontal domain and calculate processor-to-subdomain maps for
 C process analysis, if required

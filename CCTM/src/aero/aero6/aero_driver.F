@@ -554,10 +554,10 @@ C *** Accumulate wet diameters, 2nd, and 3rd moments to average aerosol diagnost
                IF ( WRITETIME .AND. PMDIAG ) PMDIAG_SPC( C,R,L,: ) = TEMP_DATA
 
 ! *** Collect Aerosol Sub-Process Rates in shared arrays
-               AERO_COND  ( C,R,L,: ) = COND_BUDGET( : )
-               AERO_COAG  ( C,R,L,:,: )=COAG_BUDGET( :,: )
-               AERO_NPF   ( C,R,L,: ) = NPF_BUDGET( : )
-               AERO_GROWTH( C,R,L,: ) = GROWTH_BUDGET( : )
+               AERO_COND  ( C,R,L,: ) =  COND_BUDGET( : )
+               AERO_COAG  ( C,R,L,:,: )= COAG_BUDGET( :,: )
+               AERO_NPF   ( C,R,L,: ) =  NPF_BUDGET( : )
+               AERO_GROWTH( C,R,L,: ) =  GROWTH_BUDGET( : )
 
 #ifdef twoway
                IF ( CMAQ_WRF_FEEDBACK ) THEN

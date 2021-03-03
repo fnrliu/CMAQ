@@ -21,8 +21,6 @@
 !
       use HDMod 
       Implicit None
-
-      Private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
 !
@@ -193,7 +191,8 @@
       Private :: CALCK3
       Private :: CALCK2
       Private :: CALCK1
-      Private :: GETASR
+C     Private :: GETASR
+      Public  :: GETASR
       Private :: EX10
       Private :: FUNCA2
       Private :: FUNCB3A

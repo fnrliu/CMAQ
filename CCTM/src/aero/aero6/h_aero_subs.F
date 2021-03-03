@@ -781,8 +781,9 @@ C    aerosols. ATMOSPHERIC CHEMISTRY AND PHYSICS. 7, 4639-4659
       USE SOA_DEFN
       USE AEROMET_DATA
       USE UTILIO_DEFN
-
-	  use HDMod 
+	  USE HDMod 
+	  use ISORROPIAII_MAIN_MOD, ONLY : ISOROPIA
+	  
       IMPLICIT NONE
 
 C *** Arguments:
@@ -2509,7 +2510,7 @@ C Actual values (10,11 not provided)
       END SUBROUTINE GETM0I               
 
 C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-      SUBROUTINE GETSC ( CONC, RH, T, SC )
+      SUBROUTINE GETSC ( CONC, RH_getsc, T, SC )
  
 C Description
 C   Determines the sub-case to use for water uptake calculations.
@@ -2529,6 +2530,8 @@ C     SC   : Sub-case for aerosol composition
 C-----------------------------------------------------------------------
 
 	  use HDMod 
+	  use ISORROPIAII_MAIN_MOD 
+	  
       IMPLICIT NONE
 
       INTEGER, PARAMETER :: NCMP = 8    ! was NCMP  = 5    ! number of aerosol components
@@ -2537,7 +2540,7 @@ C-----------------------------------------------------------------------
 C Arguments:
 !     REAL( 8 ), INTENT( IN )    :: CONC(  NCMP )
       TYPE(hyperdual), INTENT( INOUT ) :: CONC(  NCMP )
-      TYPE(hyperdual), INTENT( IN )    :: RH, T
+      TYPE(hyperdual), INTENT( IN )    :: RH_getsc, T
       CHARACTER( 3 ), INTENT( OUT ) :: SC
             
 C Local Variables:
@@ -2547,7 +2550,7 @@ C Local Variables:
       TYPE(hyperdual) :: FSO4                        ! "free" sulfate
       TYPE(hyperdual) :: DNACL, DNH4CL, DNANO3, DNH4NO3, DNH42S4 ! DRH values
 
-      TYPE(hyperdual) :: GETASR    ! ISORROPIA function for sulfate ratio
+C     TYPE(hyperdual) :: GETASR    ! ISORROPIA function for sulfate ratio
 
       LOGICAL :: SCP1R, SCP2R, SCP3R, SCP4R ! concentration regime
 
@@ -2587,8 +2590,8 @@ C     Deliquescence RH calculations
 C     Find sub-case "SC"
       IF ( SCP1R ) THEN ! NH4-S04 system
 
-         IF ( RH .GE. DNH42S4 ) THEN
-            S4RATW = GETASR( CONC( 2 ), RH ) ! aerosol sulfate ratio
+         IF ( RH_getsc .GE. DNH42S4 ) THEN
+            S4RATW = GETASR( CONC( 2 ), RH_getsc ) ! aerosol sulfate ratio
          ELSE
             S4RATW = 2.0D0                ! dry aerosol sulfate ratio
          END IF
@@ -2604,8 +2607,8 @@ C     Find sub-case "SC"
 
       ELSE IF ( SCP2R ) THEN ! NH4-SO4-NO3 system
 
-         IF ( RH .GE. DNH4NO3 ) THEN
-            S4RATW = GETASR( CONC( 2 ), RH )
+         IF ( RH_getsc .GE. DNH4NO3 ) THEN
+            S4RATW = GETASR( CONC( 2 ), RH_getsc )
          ELSE
             S4RATW = 2.0D0               ! dry aerosol ratio
          END IF
@@ -2632,10 +2635,10 @@ C        Adjust DRH of NH4NO3 for low temperature
             DNH4NO3 = MIN ( DNH4NO3, DNH4CL, DNANO3, DNACL )
          END IF
 
-         IF ( RH .GE. DNH4NO3 ) THEN
+         IF ( RH_getsc .GE. DNH4NO3 ) THEN
             FSO4   = CONC( 2 ) - CONC( 1 ) / 2.0D0   ! sulfate unbound by Na+
             FSO4   = MAX ( FSO4, SMALL )
-            SRI    = GETASR ( FSO4, RH )
+            SRI    = GETASR ( FSO4, RH_getsc )
             S4RATW = ( CONC( 1 ) + FSO4 * SRI ) / CONC( 2 )
             S4RATW = MIN ( S4RATW, 2.0D0 )
          ELSE
@@ -2660,7 +2663,7 @@ C        Adjust DRH of NH4NO3 for low temperature
          FSO4   = CONC( 2 ) - CONC( 1 ) / 2.0D0
      &          - CONC( 6 ) - CONC( 7 ) / 2.0D0 - CONC( 8 )  ! sulfate unbound by sodium,calcium,pottasium,magnesium
          FSO4   = MAX ( FSO4, SMALL )
-         SRI    = GETASR( FSO4, RH )                         ! sulfate ratio for NH4+
+         SRI    = GETASR( FSO4, RH_getsc )                         ! sulfate ratio for NH4+
          S4RATW = ( CONC( 1 ) + FSO4 * SRI + CONC( 6 )
      &            + CONC( 7 ) + CONC( 8 ) ) / CONC( 2 )      ! limiting sulfate ratio
          S4RATW = MIN ( S4RATW, 2.0D0 )

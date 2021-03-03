@@ -71,7 +71,7 @@ C aerosol emissions: [ppmv/s] for mass & number spcs, [m2/mol/s] for surface are
       PUBLIC EMISS_SIZE_DIST, AERO_EMIS_INIT,
      &       MAP_EMtoAERO, MAP_EMtoMODE, MAP_NUMtoEM, MAP_SRFtoEM,
      &       MAP_EMtoNUM, MAP_EMtoSRF, MAP_EMtoSD, EM_STREAM_SIZE, SD_SPLIT,
-     &       CELLVOL, CELLHGT, EM_SD_INIT
+     &       CELLVOL, CELLHGT, EM_SD_INIT, EMISS_SIZE_DIST_HD
       PRIVATE
 
 C Variables for converting mass emissions rate to number emissions rate
