@@ -94,7 +94,8 @@ C Arguments:
                                              !            step and wrf/cmaq call frequency
 
       INTEGER, INTENT(IN)    :: ASTEP( : )   ! layer advection time step
-
+	  
+	  INTEGER                :: ecj_number   ! file unit number for r/w
 C Local Variables:
 
       CHARACTER( 16 ) :: PNAME = 'SCIPROC'
@@ -256,20 +257,20 @@ C DECOUPLE routine converts it back to ug/m3.
          IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'COUPLE' )
          
          CALL SUBST_BARRIER()
-         CALL HADV ( CGRID, JDATE, JTIME, TSTEP, ASTEP )
-         IF ( CKSUM ) CALL CKSUMMER ( 'HADV', CGRID, JDATE, JTIME )
-      ! IF ( LIPR ) CALL PA_UPDATE ( 'HADV', CGRID, JDATE, JTIME, TSTEP )
-         IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'HADV' )
+C        CALL HADV ( CGRID, JDATE, JTIME, TSTEP, ASTEP )
+C        IF ( CKSUM ) CALL CKSUMMER ( 'HADV', CGRID, JDATE, JTIME )
+C     ! IF ( LIPR ) CALL PA_UPDATE ( 'HADV', CGRID, JDATE, JTIME, TSTEP )
+C        IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'HADV' )
+C        
+C        CALL ZADV ( CGRID, JDATE, JTIME, TSTEP )
+C        IF ( CKSUM ) CALL CKSUMMER ( 'ADV', CGRID, JDATE, JTIME )
+C        ! IF ( LIPR ) CALL PA_UPDATE ( 'ZADV', CGRID, JDATE, JTIME, TSTEP )
+C        IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'ZADV' )
          
-         CALL ZADV ( CGRID, JDATE, JTIME, TSTEP )
-         IF ( CKSUM ) CALL CKSUMMER ( 'ADV', CGRID, JDATE, JTIME )
-         ! IF ( LIPR ) CALL PA_UPDATE ( 'ZADV', CGRID, JDATE, JTIME, TSTEP )
-         IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'ZADV' )
-         
-         CALL HDIFF ( CGRID, JDATE, JTIME, TSTEP )
-         IF ( CKSUM ) CALL CKSUMMER ( 'HDIFF', CGRID, JDATE, JTIME )
-         ! IF ( LIPR ) CALL PA_UPDATE ( 'HDIF', CGRID, JDATE, JTIME, TSTEP )
-         IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'HDIFF' )
+C        CALL HDIFF ( CGRID, JDATE, JTIME, TSTEP )
+C        IF ( CKSUM ) CALL CKSUMMER ( 'HDIFF', CGRID, JDATE, JTIME )
+C        ! IF ( LIPR ) CALL PA_UPDATE ( 'HDIF', CGRID, JDATE, JTIME, TSTEP )
+C        IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'HDIFF' )
 
 C decouple CGRID for cloud and chemistry
 
@@ -310,11 +311,36 @@ C decouple CGRID for cloud and chemistry
       CGRID0  = CGRID
 #endif
 
-      CALL AERO ( CGRID_HD, JDATE, JTIME, TSTEP )
+! Take CGRID --> CGRID_HD real part
+! APPLY PERTURBATION TO EC J MODE, SEE THE IMPACT ON EC_I EC_J, EC_K
+! Compare with finite difference
+
+
+! Write a few cells to CSV (open, write to), 
+
+! FD multiply ECJ by 1.1
+! Put row and col name in file
+
+! Randomly select a few cells (4,5,1) (10,6,1) (30,50,1) (68,36,1)
+	  
+C  WRITE('BEFORE AERO, ECJ AT (4,5,1)')
+C  WRITE( CGRID(4, 5, 1, N_ECJ) ) 
+C  WRITE( CGRID(6, 10, 1, N_ECJ) )
+	  
+      CALL AERO ( CGRID_HD, JDATE, JTIME, TSTEP )      
+	  
+C  WRITE()
+C  WRITE(CGRID_HD())
+! Write a few cells to CSV (open, write to), write only cells of interest and EC related
+! calculation
+	  
+	  
       IF ( CKSUM ) CALL CKSUMMER_HD ( 'AERO', CGRID_HD, JDATE, JTIME )
       ! IF ( LIPR ) CALL PA_UPDATE_AERO ( CGRID, JDATE, JTIME, TSTEP )
       IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'AERO' )
       IF ( STM ) CALL STM_WRAP_AE ( CGRID_HD, JDATE, JTIME )
+
+! transfer real part of CGRID_HD back to CGRID
 
 #ifdef isam
       CALL SA_WRAP_AE( CGRID0, CGRID, JDATE, JTIME, TSTEP )

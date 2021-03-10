@@ -151,6 +151,10 @@ C pick up transported RHOJ
                   VAR = VAR + 1
                   VTYPE3D( VAR ) = M3REAL
                   VNAME3D( VAR ) = AE_SPC( SPC )
+                  
+                  ! ECJ
+                  ! Write here to see
+                  
                   IF ( VNAME3D( VAR )(1:3) .EQ. 'NUM' ) THEN
                      UNITS3D( VAR ) = 'm-3'
                   ELSE IF ( VNAME3D( VAR )(1:3) .EQ. 'SRF' ) THEN

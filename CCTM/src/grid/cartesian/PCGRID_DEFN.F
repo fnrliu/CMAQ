@@ -59,7 +59,7 @@ C-----------------------------------------------------------------------
 
          USE UTILIO_DEFN
 
-!        INCLUDE SUBST_VGRD_ID     ! vertical dimensioning parameters
+!        INCLUDE SUBST_VGRD_ID       ! vertical dimensioning parameters
 
          LOGICAL :: SUCCESS
          INTEGER :: ALLOCSTAT
