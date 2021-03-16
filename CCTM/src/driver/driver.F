@@ -162,7 +162,8 @@ c     USE PMFRC_DEFN            ! MAPFRAC array definition ( adapted )
       USE NOOP_MODULES          ! stenex (using NOOP_INIT_MODULE)
 #endif
 #endif   ! end mpas
-
+	  
+	  USE csv_file              ! read/write of csv files, J.E.L. 
       IMPLICIT NONE
 
       INTEGER, INTENT( IN )  :: MODEL_STDATE, MODEL_STTIME, MODEL_TSTEP
@@ -207,6 +208,7 @@ C Local variables:
       CHARACTER(   16 ) :: ACT
       REAL( 8 )         :: CPU_TIME_START, CPU_TIME_FINISH
       REAL              :: REAL_TIME
+      LOGICAL, SAVE  :: CSV_FIRST_TIME = .TRUE.     ! J.E.L. addition
 
 
       CHARACTER(  2 ) :: COLROW = 'CR'  ! col/row arg list order
@@ -615,7 +617,7 @@ C Initialize Meteorology Structures
 C Main processing loop:
          IF ( MYPE .EQ. 0 ) WRITE( OUTDEV, * )
          IF ( MYPE. EQ. 0 ) CALL LOG_HEADING( OUTDEV, "Time Integration" )
-
+	  
       END IF ! first_run
 
       MODEL_JDATE = JDATE
@@ -711,10 +713,25 @@ C Get synchronization and advection time steps, TSTEP(2), ASTEP(L) and NREPS
 C science process sequence:
          
       myNREPS = myNREPS + NREPS
-
+	  
+	  open(139, file='ecj_conc.csv',access='APPEND')
+	  open(140, file='eci_conc.csv',access='APPEND')
+	  
       DO IREP = 1, NREPS
-
-            CALL SCIPROC ( CGRID, JDATE, JTIME, TSTEP, ASTEP )
+	
+        call csv_write(139, CGRID(45,45,1,139), .false.)
+        call csv_write(139, JTIME, .false.)
+        call csv_write(139, TSTEP(2), .false.)
+        call csv_next_record(139)
+        
+        call csv_write(140, CGRID(45,45,1,140), .false.)
+        call csv_write(140, JTIME, .false.)
+        call csv_write(140, TSTEP(2), .false.)
+        call csv_next_record(140)
+        
+	    
+        CALL SCIPROC ( CGRID, JDATE, JTIME, TSTEP, ASTEP )
+            
 
 #ifndef mpas
 C Use trapezoidal rule to time-average data
@@ -758,8 +775,12 @@ C Use trapezoidal rule to time-average data
 #endif
 
 #endif
-
+		
       END DO
+
+	  close(139)
+	  close(140)
+
 
 #ifndef mpas
       IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
@@ -804,7 +825,7 @@ C Use trapezoidal rule to time-average data
 #endif
 
       END IF
-
+ 	  
       DO V = 1, N_CSPCS
          S = CONC_MAP( V )
          SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
@@ -828,6 +849,7 @@ C write conc fields
          CALL WR_SA     ( JDATE, JTIME, TSTEP, 1 )
          CALL WR_AVG_SA ( JDATE, JTIME, TSTEP( 1 ) )
 #endif
+
 
 #ifdef sens
          CALL WR_ASENS ( JDATE, JTIME, TSTEP( 1 ) )
