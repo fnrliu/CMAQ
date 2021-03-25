@@ -74,6 +74,6 @@ bldit_project.csh
 
 # Do not commit the pdfs
 *.pdf 
-/Analysis/plots
+/analysis/plots
 /data
 

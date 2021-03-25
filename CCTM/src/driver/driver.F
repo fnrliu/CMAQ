@@ -208,7 +208,6 @@ C Local variables:
       CHARACTER(   16 ) :: ACT
       REAL( 8 )         :: CPU_TIME_START, CPU_TIME_FINISH
       REAL              :: REAL_TIME
-      LOGICAL, SAVE  :: CSV_FIRST_TIME = .TRUE.     ! J.E.L. addition
 
 
       CHARACTER(  2 ) :: COLROW = 'CR'  ! col/row arg list order
@@ -714,20 +713,20 @@ C science process sequence:
          
       myNREPS = myNREPS + NREPS
 	  
-	  open(139, file='ecj_conc.csv',access='APPEND')
-	  open(140, file='eci_conc.csv',access='APPEND')
+C  open(139, file='ecj_conc.csv',access='APPEND')
+C  open(140, file='eci_conc.csv',access='APPEND')
 	  
       DO IREP = 1, NREPS
 	
-        call csv_write(139, CGRID(45,45,1,139), .false.)
-        call csv_write(139, JTIME, .false.)
-        call csv_write(139, TSTEP(2), .false.)
-        call csv_next_record(139)
-        
-        call csv_write(140, CGRID(45,45,1,140), .false.)
-        call csv_write(140, JTIME, .false.)
-        call csv_write(140, TSTEP(2), .false.)
-        call csv_next_record(140)
+C       call csv_write(139, CGRID(45,45,1,139), .false.)
+C       call csv_write(139, JTIME, .false.)
+C       call csv_write(139, TSTEP(2), .false.)
+C       call csv_next_record(139)
+C       
+C       call csv_write(140, CGRID(45,45,1,140), .false.)
+C       call csv_write(140, JTIME, .false.)
+C       call csv_write(140, TSTEP(2), .false.)
+C       call csv_next_record(140)
         
 	    
         CALL SCIPROC ( CGRID, JDATE, JTIME, TSTEP, ASTEP )
@@ -778,8 +777,8 @@ C Use trapezoidal rule to time-average data
 		
       END DO
 
-	  close(139)
-	  close(140)
+C  close(139)
+C  close(140)
 
 
 #ifndef mpas
@@ -840,7 +839,8 @@ C write conc fields
          CALL CPU_TIME( REAL_TIME )
          CPU_TIME_START = REAL( REAL_TIME,8 )
 #endif
-         CALL WR_CONC ( JDATE, JTIME, TSTEP( 1 ) )
+C        CALL WR_CONC ( JDATE, JTIME, TSTEP( 1 ) )
+         
 #ifdef parallel
          IF ( LVEXT ) CALL WR_VEXT ( CGRID, JDATE, JTIME, TSTEP( 1 ) )
 #endif

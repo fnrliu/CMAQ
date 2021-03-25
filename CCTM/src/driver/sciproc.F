@@ -55,11 +55,11 @@ C    16 Sep 16 J.Young: update for inline procan (IPR)
 C    10 July 19 F. Sidi: Renamed Couple_WRF to be couple
 C-----------------------------------------------------------------------
 
-      USE UTILIO_DEFN, ONLY: DT2STR, WKDAY
-      USE RUNTIME_VARS, ONLY: LOGDEV, OUTDEV, MYPE, CKSUM, 
-     &                        PRINT_PROC_TIME, WEEKDAY, 
-     &                        LOG_MESSAGE, TIMING_SPLIT, STM,
-     &                        COLUMN_MODEL
+C     USE UTILIO_DEFN, ONLY: DT2STR, WKDAY
+C     USE RUNTIME_VARS, ONLY: LOGDEV, OUTDEV, MYPE, CKSUM, 
+C    &                        PRINT_PROC_TIME, WEEKDAY, 
+C    &                        LOG_MESSAGE, TIMING_SPLIT, STM,
+C    &                        COLUMN_MODEL
 #ifdef parallel
       USE SE_MODULES            ! stenex (using SE_UTIL_MODULE)
 #else
@@ -72,9 +72,15 @@ C-----------------------------------------------------------------------
       USE GRID_CONF
       USE CGRID_SPCS, ONLY: NSPCSD
 #endif
-
+	  
+	  
       USE STM_MODULE, ONLY: STM_WRAP_GAS, STM_WRAP_AE
-
+	  USE STD_CONC           ! Write conc in STD_CONC, edited by J.E.L.
+	  USE RUNTIME_VARS       ! CONC_BLEV, CONC_ELEV are here, J.E.L.
+	  USE UTILIO_DEFN        ! J.E.L. 
+	  
+	  
+	  
       IMPLICIT NONE   
 
 #ifdef parallel
@@ -98,6 +104,8 @@ C Local Variables:
       CHARACTER( 16 ) :: PNAME = 'SCIPROC'
       CHARACTER( 120 ) :: XMSG = ' '
       CHARACTER( 36 ) :: NMSG = 'After NEXTIME: returned JDATE, JTIME'
+      CHARACTER( 36 ) :: CGRID_BF_MSG = ' '
+      CHARACTER( 36 ) :: CGRID_AF_MSG = ' '
 
       INTEGER         ::     SDATE       ! current science process date, coded YYYYDDD
       INTEGER         ::     STIME       ! current science process time, coded HHMMSS
@@ -107,6 +115,11 @@ C Local Variables:
       REAL( 8 )       :: CPU_TIME_START  ! Timing individual
       REAL( 8 )       :: CPU_TIME_START_MASTER
       CHARACTER( 24 ) :: CDATE_TIME
+      
+      REAL( 8 ), PARAMETER       :: SCALING_PARAM = 1.1D0
+      INTEGER         :: PERTURB_TIME 
+      
+      INTEGER         :: V, S            ! Added by J.E.L. for writing the result in sciproc
 
 #ifdef isam
       REAL, ALLOCATABLE, SAVE :: CGRID0( :,:,:,: )
@@ -228,83 +241,118 @@ C-----------------------------------------------------------------------
       WRITE( XMSG, '(2x,A,I6.6)' ), 'Time-Step Length (HHMMSS): ',TSTEP(2) 
       IF ( MYPE .EQ. 0 ) CALL LOG_MESSAGE( OUTDEV, XMSG )
       CALL LOG_MESSAGE( LOGDEV, XMSG )
-
+	  
+      
 C Synchronization Step Physical Processes Sequence
+
+C     IF (JTIME .EQ. 0) THEN
+C     	 CALL LOG_HEADING(LOGDEV, 'PERTURBED')
+C  	     CGRID(:, :, :, 132) = CGRID(:, :, :, 132) + 0.05
+C  	  END IF
+
+
       CALL VDIFF ( CGRID, JDATE, JTIME, TSTEP )
       IF ( CKSUM ) CALL CKSUMMER ( 'VDIFF', CGRID, JDATE, JTIME )
       IF ( LIPR ) CALL PA_UPDATE ( 'VDIF', CGRID, JDATE, JTIME, TSTEP )
       IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'VDIFF' )
 
 
-      IF ( .NOT. COLUMN_MODEL ) THEN
+C     IF ( .NOT. COLUMN_MODEL ) THEN
 C couple CGRID for advection and horizontal diffusion
 C The COUPLE routine converts aerosol mass from ug/m3 to kg/m3. The 
 C DECOUPLE routine converts it back to ug/m3.
 
-         CALL COUPLE ( CGRID, JDATE, JTIME, TSTEP )
-         IF ( CKSUM ) CALL CKSUMMER ( 'COUPLE', CGRID, JDATE, JTIME )
-         IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'COUPLE' )
-         
-         CALL SUBST_BARRIER()
-         CALL HADV ( CGRID, JDATE, JTIME, TSTEP, ASTEP )
-         IF ( CKSUM ) CALL CKSUMMER ( 'HADV', CGRID, JDATE, JTIME )
-         IF ( LIPR ) CALL PA_UPDATE ( 'HADV', CGRID, JDATE, JTIME, TSTEP )
-         IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'HADV' )
-         
-         CALL ZADV ( CGRID, JDATE, JTIME, TSTEP )
-         IF ( CKSUM ) CALL CKSUMMER ( 'ADV', CGRID, JDATE, JTIME )
-         IF ( LIPR ) CALL PA_UPDATE ( 'ZADV', CGRID, JDATE, JTIME, TSTEP )
-         IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'ZADV' )
-         
-         CALL HDIFF ( CGRID, JDATE, JTIME, TSTEP )
-         IF ( CKSUM ) CALL CKSUMMER ( 'HDIFF', CGRID, JDATE, JTIME )
-         IF ( LIPR ) CALL PA_UPDATE ( 'HDIF', CGRID, JDATE, JTIME, TSTEP )
-         IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'HDIFF' )
+C        CALL COUPLE ( CGRID, JDATE, JTIME, TSTEP )
+C        IF ( CKSUM ) CALL CKSUMMER ( 'COUPLE', CGRID, JDATE, JTIME )
+C        IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'COUPLE' )
+C        
+C        CALL SUBST_BARRIER()
+C        CALL HADV ( CGRID, JDATE, JTIME, TSTEP, ASTEP )
+C        IF ( CKSUM ) CALL CKSUMMER ( 'HADV', CGRID, JDATE, JTIME )
+C        IF ( LIPR ) CALL PA_UPDATE ( 'HADV', CGRID, JDATE, JTIME, TSTEP )
+C        IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'HADV' )
+C        
+C        CALL ZADV ( CGRID, JDATE, JTIME, TSTEP )
+C        IF ( CKSUM ) CALL CKSUMMER ( 'ADV', CGRID, JDATE, JTIME )
+C        IF ( LIPR ) CALL PA_UPDATE ( 'ZADV', CGRID, JDATE, JTIME, TSTEP )
+C        IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'ZADV' )
+C        
+C        CALL HDIFF ( CGRID, JDATE, JTIME, TSTEP )
+C        IF ( CKSUM ) CALL CKSUMMER ( 'HDIFF', CGRID, JDATE, JTIME )
+C        IF ( LIPR ) CALL PA_UPDATE ( 'HDIF', CGRID, JDATE, JTIME, TSTEP )
+C        IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'HDIFF' )
 
 C decouple CGRID for cloud and chemistry
 
-         SDATE = JDATE
-         STIME = JTIME
-         CALL NEXTIME ( SDATE, STIME, TSTEP( 2 ) )
+C       SDATE = JDATE
+C       STIME = JTIME
+C       CALL NEXTIME ( SDATE, STIME, TSTEP( 2 ) )
          
-         CALL DECOUPLE ( CGRID, SDATE, STIME, TSTEP )
-         IF ( CKSUM ) CALL CKSUMMER ( 'DECOUPLE', CGRID, JDATE, JTIME )
-         IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'DECOUPLE' )
+C        CALL DECOUPLE ( CGRID, SDATE, STIME, TSTEP )
+C        IF ( CKSUM ) CALL CKSUMMER ( 'DECOUPLE', CGRID, JDATE, JTIME )
+C        IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'DECOUPLE' )
+C
+C     END IF
+C     
+C     CALL PHOT ( CGRID, JDATE, JTIME, TSTEP )
+C     IF ( CKSUM ) CALL CKSUMMER ( 'PHOT', CGRID, JDATE, JTIME )
+C     IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'PHOT' )
+C
+C     CALL CLDPROC ( CGRID, JDATE, JTIME, TSTEP )
+C     IF ( CKSUM ) CALL CKSUMMER ( 'CLDPROC', CGRID, JDATE, JTIME )
+C     IF ( LIPR ) CALL PA_UPDATE ( 'CLDS', CGRID, JDATE, JTIME, TSTEP )
+C     IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'CLDPROC' )
+C
+C     IF ( STM ) CALL STM_WRAP_GAS ( CGRID, JDATE, JTIME, .TRUE. )
+C     CALL CHEM ( CGRID, JDATE, JTIME, TSTEP )
+C     IF ( CKSUM ) CALL CKSUMMER ( 'CHEM', CGRID, JDATE, JTIME )
+C     IF ( LIPR ) CALL PA_UPDATE ( 'CHEM', CGRID, JDATE, JTIME, TSTEP ) 
+C     IF ( STM ) CALL STM_WRAP_GAS ( CGRID, JDATE, JTIME, .FALSE. )
+C     IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'CHEM' )
+C
+C#ifdef potvorto3
+C     CALL PVO3 ( CGRID, JDATE, JTIME )
+C     IF ( CKSUM ) CALL CKSUMMER ( 'PVO3', CGRID, JDATE, JTIME )
+C     IF ( LIPR ) CALL PA_UPDATE ( 'PVO3', CGRID, JDATE, JTIME, TSTEP )
+C     IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'PVO3' )
+C#endif
 
+C#ifdef isam
+C     CGRID0  = CGRID
+C#endif
+
+
+      DO V = 1, N_CSPCS
+         S = CONC_MAP( V )
+         SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
+      END DO
+   
+      IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
+      	 CALL WR_CONC( JDATE, JTIME, TSTEP( 1 ) )
       END IF
-      
-      CALL PHOT ( CGRID, JDATE, JTIME, TSTEP )
-      IF ( CKSUM ) CALL CKSUMMER ( 'PHOT', CGRID, JDATE, JTIME )
-      IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'PHOT' )
 
-      CALL CLDPROC ( CGRID, JDATE, JTIME, TSTEP )
-      IF ( CKSUM ) CALL CKSUMMER ( 'CLDPROC', CGRID, JDATE, JTIME )
-      IF ( LIPR ) CALL PA_UPDATE ( 'CLDS', CGRID, JDATE, JTIME, TSTEP )
-      IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'CLDPROC' )
 
-      IF ( STM ) CALL STM_WRAP_GAS ( CGRID, JDATE, JTIME, .TRUE. )
-      CALL CHEM ( CGRID, JDATE, JTIME, TSTEP )
-      IF ( CKSUM ) CALL CKSUMMER ( 'CHEM', CGRID, JDATE, JTIME )
-      IF ( LIPR ) CALL PA_UPDATE ( 'CHEM', CGRID, JDATE, JTIME, TSTEP ) 
-      IF ( STM ) CALL STM_WRAP_GAS ( CGRID, JDATE, JTIME, .FALSE. )
-      IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'CHEM' )
+C     # 132: ANH4J
+C     # 156: AECJ
 
-#ifdef potvorto3
-      CALL PVO3 ( CGRID, JDATE, JTIME )
-      IF ( CKSUM ) CALL CKSUMMER ( 'PVO3', CGRID, JDATE, JTIME )
-      IF ( LIPR ) CALL PA_UPDATE ( 'PVO3', CGRID, JDATE, JTIME, TSTEP )
-      IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'PVO3' )
-#endif
-
-#ifdef isam
-      CGRID0  = CGRID
-#endif
+C     Perturb at T = 0
 
       CALL AERO ( CGRID, JDATE, JTIME, TSTEP )
       IF ( CKSUM ) CALL CKSUMMER ( 'AERO', CGRID, JDATE, JTIME )
       IF ( LIPR ) CALL PA_UPDATE_AERO ( CGRID, JDATE, JTIME, TSTEP )
       IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'AERO' )
       IF ( STM ) CALL STM_WRAP_AE ( CGRID, JDATE, JTIME )
+	    
+      DO V = 1, N_CSPCS
+         S = CONC_MAP( V )
+         SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
+      END DO
+      
+C     Write the result after aero at a artificial later time step
+      IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
+        PERTURB_TIME = JTIME + 120000
+      	CALL WR_CONC( JDATE, PERTURB_TIME, TSTEP( 1 ) )
+	  END IF 
 
 #ifdef isam
       CALL SA_WRAP_AE( CGRID0, CGRID, JDATE, JTIME, TSTEP )
