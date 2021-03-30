@@ -117,7 +117,7 @@ C Local Variables:
       CHARACTER( 24 ) :: CDATE_TIME
       
       REAL( 8 ), PARAMETER       :: SCALING_PARAM = 1.1D0
-      INTEGER         :: PERTURB_TIME 
+      INTEGER         :: TIME_AFTER_AERO, TIME_AFTER_PERT
       
       INTEGER         :: V, S            ! Added by J.E.L. for writing the result in sciproc
 
@@ -245,12 +245,6 @@ C-----------------------------------------------------------------------
       
 C Synchronization Step Physical Processes Sequence
 
-C     IF (JTIME .EQ. 0) THEN
-C     	 CALL LOG_HEADING(LOGDEV, 'PERTURBED')
-C  	     CGRID(:, :, :, 132) = CGRID(:, :, :, 132) + 0.05
-C  	  END IF
-
-
       CALL VDIFF ( CGRID, JDATE, JTIME, TSTEP )
       IF ( CKSUM ) CALL CKSUMMER ( 'VDIFF', CGRID, JDATE, JTIME )
       IF ( LIPR ) CALL PA_UPDATE ( 'VDIF', CGRID, JDATE, JTIME, TSTEP )
@@ -321,21 +315,37 @@ C#ifdef isam
 C     CGRID0  = CGRID
 C#endif
 
-
-      DO V = 1, N_CSPCS
-         S = CONC_MAP( V )
-         SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
-      END DO
-   
-      IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
-      	 CALL WR_CONC( JDATE, JTIME, TSTEP( 1 ) )
-      END IF
-
-
 C     # 132: ANH4J
 C     # 156: AECJ
+      DO V = 1, N_CSPCS
+            S = CONC_MAP( V )
+            SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
+      END DO
 
-C     Perturb at T = 0
+      IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
+            CALL WR_CONC( JDATE, JTIME, TSTEP( 1 ) )
+      END IF
+      
+C     Scale the values by the scaling_param
+
+      ! IF (JTIME .EQ. 5500) THEN
+   	!  CGRID(:, :, :, 156) = CGRID(:, :, :, 156) * SCALING_PARAM
+      ! END IF
+   	     
+   	 DO V = 1, N_CSPCS
+         	S = CONC_MAP( V )
+         	SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
+       END DO
+      	 
+C      Write the result after perturbation (only perturbed for T = 5500, the otehr)
+       
+      	 
+       IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
+            TIME_AFTER_PERT = JTIME + 10000
+            CALL WR_CONC( JDATE, TIME_AFTER_PERT, TSTEP( 1 ) )
+      END IF
+   	     
+   	 
 
       CALL AERO ( CGRID, JDATE, JTIME, TSTEP )
       IF ( CKSUM ) CALL CKSUMMER ( 'AERO', CGRID, JDATE, JTIME )
@@ -343,16 +353,17 @@ C     Perturb at T = 0
       IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'AERO' )
       IF ( STM ) CALL STM_WRAP_AE ( CGRID, JDATE, JTIME )
 	    
+      	 
       DO V = 1, N_CSPCS
-         S = CONC_MAP( V )
-         SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
+            S = CONC_MAP( V )
+            SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
       END DO
-      
-C     Write the result after aero at a artificial later time step
+
       IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
-        PERTURB_TIME = JTIME + 120000
-      	CALL WR_CONC( JDATE, PERTURB_TIME, TSTEP( 1 ) )
-	  END IF 
+        TIME_AFTER_AERO = JTIME + 20000
+        CALL WR_CONC( JDATE, TIME_AFTER_AERO, TSTEP( 1 ) )
+      END IF
+      
 
 #ifdef isam
       CALL SA_WRAP_AE( CGRID0, CGRID, JDATE, JTIME, TSTEP )
