@@ -243,7 +243,7 @@ C-----------------------------------------------------------------------
 C Synchronization Step Physical Processes Sequence
       CALL VDIFF ( CGRID, JDATE, JTIME, TSTEP )
       IF ( CKSUM ) CALL CKSUMMER ( 'VDIFF', CGRID, JDATE, JTIME )
-      IF ( LIPR ) CALL PA_UPDATE ( 'VDIF', CGRID, JDATE, JTIME, TSTEP )
+      ! IF ( LIPR ) CALL PA_UPDATE ( 'VDIF', CGRID, JDATE, JTIME, TSTEP )
       IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'VDIFF' )
 
 
@@ -312,12 +312,7 @@ C     CGRID0  = CGRID
 C#endif
 	  
       CALL AERO ( CGRID_HD, JDATE, JTIME, TSTEP )      
-	  
-C  WRITE()
-C  WRITE(CGRID_HD())
-! Write a few cells to CSV (open, write to), write only cells of interest and EC related
-! calculation
-	  
+	  	  
 	  
       IF ( CKSUM ) CALL CKSUMMER_HD ( 'AERO', CGRID_HD, JDATE, JTIME )
       ! IF ( LIPR ) CALL PA_UPDATE_AERO ( CGRID, JDATE, JTIME, TSTEP )
