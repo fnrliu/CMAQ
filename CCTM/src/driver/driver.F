@@ -240,7 +240,7 @@ C Local variables:
                                            !      Before
                                            !      (N, M2, M3) -
                                            !      After
-      REAL,ALLOCATABLE :: AECON( : )
+      REAL, ALLOCATABLE :: AECON( : )
       LOGICAL,SAVE :: NEW_START
 #endif
 
@@ -820,6 +820,7 @@ C write conc fields
          CPU_TIME_START = REAL( REAL_TIME,8 )
 #endif
          CALL WR_CONC ( JDATE, JTIME, TSTEP( 1 ) )
+
 #ifdef parallel
          IF ( LVEXT ) CALL WR_VEXT ( CGRID, JDATE, JTIME, TSTEP( 1 ) )
 #endif

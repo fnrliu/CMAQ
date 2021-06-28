@@ -341,7 +341,8 @@ C *** Update size parameters (distribution is wet from ORGAER)
 ! *** Mass transfer of inorganic constituents      
 ! *** Process Budget is calculated inside this routine because NPF and
 ! *** condensation are calculated simultaneously
-      CALL VOLINORG( DT, COL, ROW, LAYER, DV_SO4, CGR )
+!     Turned off by J.E.L. 
+!     CALL VOLINORG( DT, COL, ROW, LAYER, DV_SO4, CGR )
 
 ! *** Coagulation
 !     Calculate coagulation coefficients using a method dictated by

@@ -1,5 +1,32 @@
 #!/bin/csh -f
 
+#$ -S /bin/csh                                                                  
+#$ -cwd                                                                         
+#$ -j y                                                                         
+#$ -M el662@drexel.edu                                                         
+#$ -P cappsPrj                                                                  
+#$ -pe fixed16 16                                                              
+#$ -l h_vmem=64G                                                               
+#$ -l h_rt=00:30:00 
+#$ -l vendor=intel                                                            
+#$ -q all.q@@intelhosts    
+#$ -R y                                                     
+
+source /etc/profile.d/modules.csh
+
+### These four modules must ALWAYS be loaded                                    
+module load shared
+module load proteus
+module load sge/univa
+module load gcc
+
+### Modules used when compiling code                                            
+module load intel/composerxe/2015.1.133
+module load proteus-hdf5_18/intel/2015/1.8.17-serial
+module load proteus-netcdf/intel/2015/4.4.1
+module load proteus-netcdf-fortran/intel/2015/4.4.4
+module load proteus-openmpi/intel/2015/1.8.1-mlnx-ofed
+
 # ===================== CCTMv5.3.X Run Script ========================= 
 # Usage: run.cctm >&! cctm_Bench_2016_12SE1.log &                                
 #
@@ -54,7 +81,7 @@ echo 'Start Model Run At ' `date`
 #> Set Working, Input, and Output Directories
  setenv WORKDIR ${CMAQ_HOME}/CCTM/scripts          #> Working Directory. Where the runscript is.
  setenv OUTDIR  ${CMAQ_DATA}/output_CCTM_${RUNID}  #> Output Directory
- setenv INPDIR  ${CMAQ_DATA}/2016_12SE1            #> Input Directory
+ setenv INPDIR  ${CMAQ_DATA}/SEv5.3.2.BENCH/CMAQv5.3.2_Benchmark_2Day_Input/2016_12SE1/           #> Input Directory
  setenv LOGDIR  ${OUTDIR}/LOGS     #> Log Directory Location
  setenv NMLpath ${BLD}             #> Location of Namelists. Common places are: 
                                    #>   ${WORKDIR} | ${CCTM_SRC}/MECHS/${MECH} | ${BLD}
@@ -84,7 +111,7 @@ set TSTEP      = 010000            #> output time step interval (HHMMSS)
 if ( $PROC == serial ) then
    setenv NPCOL_NPROW "1 1"; set NPROCS   = 1 # single processor setting
 else
-   @ NPCOL  =  8; @ NPROW =  4
+   @ NPCOL  =  4; @ NPROW =  4
    @ NPROCS = $NPCOL * $NPROW
    setenv NPCOL_NPROW "$NPCOL $NPROW"; 
 endif
@@ -119,7 +146,7 @@ set NCELLS = `echo "${NX} * ${NY} * ${NZ}" | bc -l`
 
 #> Output Species and Layer Options
    #> CONC file species; comment or set to "ALL" to write all species to CONC
-   setenv CONC_SPCS "O3 NO ANO3I ANO3J NO2 FORM ISOP NH3 ANH4I ANH4J ASO4I ASO4J" 
+   setenv CONC_SPCS "O3 NO ANO3I ANO3J NO2 FORM ISOP NH3 ANH4I ANH4J ASO4I ASO4J AECI AECJ" 
    setenv CONC_BLEV_ELEV " 1 1" #> CONC file layer range; comment to write all layers to CONC
 
    #> ACONC file species; comment or set to "ALL" to write all species to ACONC
