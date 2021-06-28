@@ -72,16 +72,11 @@ C    &                        COLUMN_MODEL
       USE GRID_CONF
       USE CGRID_SPCS, ONLY: NSPCSD
 #endif
-	  
-	  
+
       USE STM_MODULE, ONLY: STM_WRAP_GAS, STM_WRAP_AE
-	  USE STD_CONC           ! Write conc in STD_CONC, edited by J.E.L.
-	  USE RUNTIME_VARS       ! CONC_BLEV, CONC_ELEV are here, J.E.L.
-	  USE UTILIO_DEFN        ! J.E.L. 
-	  
-	  
-	  
-      IMPLICIT NONE   
+      USE STD_CONC           ! Write conc in STD_CONC, edited by J.E.L.
+      USE RUNTIME_VARS       ! CONC_BLEV, CONC_ELEV are here, J.E.L.
+      USE UTILIO_DEFN        ! J.E.L.       IMPLICIT NONE   
 
 #ifdef parallel
       INCLUDE 'mpif.h'
@@ -104,8 +99,6 @@ C Local Variables:
       CHARACTER( 16 ) :: PNAME = 'SCIPROC'
       CHARACTER( 120 ) :: XMSG = ' '
       CHARACTER( 36 ) :: NMSG = 'After NEXTIME: returned JDATE, JTIME'
-      CHARACTER( 36 ) :: CGRID_BF_MSG = ' '
-      CHARACTER( 36 ) :: CGRID_AF_MSG = ' '
 
       INTEGER         ::     SDATE       ! current science process date, coded YYYYDDD
       INTEGER         ::     STIME       ! current science process time, coded HHMMSS
@@ -115,11 +108,6 @@ C Local Variables:
       REAL( 8 )       :: CPU_TIME_START  ! Timing individual
       REAL( 8 )       :: CPU_TIME_START_MASTER
       CHARACTER( 24 ) :: CDATE_TIME
-      
-      REAL( 8 ), PARAMETER       :: SCALING_PARAM = 1.1D0
-      INTEGER         :: TIME_AFTER_AERO, TIME_AFTER_PERT
-      
-      INTEGER         :: V, S            ! Added by J.E.L. for writing the result in sciproc
 
 #ifdef isam
       REAL, ALLOCATABLE, SAVE :: CGRID0( :,:,:,: )
@@ -241,10 +229,23 @@ C-----------------------------------------------------------------------
       WRITE( XMSG, '(2x,A,I6.6)' ), 'Time-Step Length (HHMMSS): ',TSTEP(2) 
       IF ( MYPE .EQ. 0 ) CALL LOG_MESSAGE( OUTDEV, XMSG )
       CALL LOG_MESSAGE( LOGDEV, XMSG )
-	  
-      
+
 C Synchronization Step Physical Processes Sequence
 
+C sum over the layers
+   	  IF ( JTIME .EQ. 0 ) THEN
+C    	 CGRID(:,:,:,133) = CGRID(:,:,:,133) * 0.975
+   	     
+   	     DO V = 1, N_CSPCS
+         	S = CONC_MAP( V )
+         	SGRID( :,:,:,V ) = CGRID( :,:, CONC_BLEV:CONC_ELEV,S )
+      	 END DO
+      	 
+      	 CALL WR_CONC ( JDATE, JTIME, TSTEP( 1 ) )
+   	       	     
+      ENDIF
+      	  
+	  
       CALL VDIFF ( CGRID, JDATE, JTIME, TSTEP )
       IF ( CKSUM ) CALL CKSUMMER ( 'VDIFF', CGRID, JDATE, JTIME )
       IF ( LIPR ) CALL PA_UPDATE ( 'VDIF', CGRID, JDATE, JTIME, TSTEP )
@@ -278,16 +279,16 @@ C        IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'HDIFF' )
 
 C decouple CGRID for cloud and chemistry
 
-C       SDATE = JDATE
-C       STIME = JTIME
-C       CALL NEXTIME ( SDATE, STIME, TSTEP( 2 ) )
-         
+C        SDATE = JDATE
+C        STIME = JTIME
+C        CALL NEXTIME ( SDATE, STIME, TSTEP( 2 ) )
+C       
 C        CALL DECOUPLE ( CGRID, SDATE, STIME, TSTEP )
 C        IF ( CKSUM ) CALL CKSUMMER ( 'DECOUPLE', CGRID, JDATE, JTIME )
 C        IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'DECOUPLE' )
 C
 C     END IF
-C     
+      
 C     CALL PHOT ( CGRID, JDATE, JTIME, TSTEP )
 C     IF ( CKSUM ) CALL CKSUMMER ( 'PHOT', CGRID, JDATE, JTIME )
 C     IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'PHOT' )
@@ -310,60 +311,16 @@ C     IF ( CKSUM ) CALL CKSUMMER ( 'PVO3', CGRID, JDATE, JTIME )
 C     IF ( LIPR ) CALL PA_UPDATE ( 'PVO3', CGRID, JDATE, JTIME, TSTEP )
 C     IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'PVO3' )
 C#endif
-
+C
 C#ifdef isam
 C     CGRID0  = CGRID
 C#endif
-
-C     # 132: ANH4J
-C     # 156: AECJ
-      DO V = 1, N_CSPCS
-            S = CONC_MAP( V )
-            SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
-      END DO
-
-      IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
-            CALL WR_CONC( JDATE, JTIME, TSTEP( 1 ) )
-      END IF
-      
-C     Scale the values by the scaling_param
-
-      ! IF (JTIME .EQ. 5500) THEN
-   	!  CGRID(:, :, :, 156) = CGRID(:, :, :, 156) * SCALING_PARAM
-      ! END IF
-   	     
-   	 DO V = 1, N_CSPCS
-         	S = CONC_MAP( V )
-         	SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
-       END DO
-      	 
-C      Write the result after perturbation (only perturbed for T = 5500, the otehr)
-       
-      	 
-       IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
-            TIME_AFTER_PERT = JTIME + 10000
-            CALL WR_CONC( JDATE, TIME_AFTER_PERT, TSTEP( 1 ) )
-      END IF
-   	     
-   	 
-
+	    
       CALL AERO ( CGRID, JDATE, JTIME, TSTEP )
       IF ( CKSUM ) CALL CKSUMMER ( 'AERO', CGRID, JDATE, JTIME )
       IF ( LIPR ) CALL PA_UPDATE_AERO ( CGRID, JDATE, JTIME, TSTEP )
       IF ( PRINT_PROC_TIME ) CALL TIMING_SPLIT ( CPU_TIME_START, 1, 'AERO' )
       IF ( STM ) CALL STM_WRAP_AE ( CGRID, JDATE, JTIME )
-	    
-      	 
-      DO V = 1, N_CSPCS
-            S = CONC_MAP( V )
-            SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
-      END DO
-
-      IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
-        TIME_AFTER_AERO = JTIME + 20000
-        CALL WR_CONC( JDATE, TIME_AFTER_AERO, TSTEP( 1 ) )
-      END IF
-      
 
 #ifdef isam
       CALL SA_WRAP_AE( CGRID0, CGRID, JDATE, JTIME, TSTEP )

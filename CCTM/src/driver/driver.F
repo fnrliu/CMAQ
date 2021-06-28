@@ -162,8 +162,7 @@ c     USE PMFRC_DEFN            ! MAPFRAC array definition ( adapted )
       USE NOOP_MODULES          ! stenex (using NOOP_INIT_MODULE)
 #endif
 #endif   ! end mpas
-	  
-	  USE csv_file              ! read/write of csv files, J.E.L. 
+
       IMPLICIT NONE
 
       INTEGER, INTENT( IN )  :: MODEL_STDATE, MODEL_STTIME, MODEL_TSTEP
@@ -241,7 +240,7 @@ C Local variables:
                                            !      Before
                                            !      (N, M2, M3) -
                                            !      After
-      REAL,ALLOCATABLE :: AECON( : )
+      REAL, ALLOCATABLE :: AECON( : )
       LOGICAL,SAVE :: NEW_START
 #endif
 
@@ -616,7 +615,7 @@ C Initialize Meteorology Structures
 C Main processing loop:
          IF ( MYPE .EQ. 0 ) WRITE( OUTDEV, * )
          IF ( MYPE. EQ. 0 ) CALL LOG_HEADING( OUTDEV, "Time Integration" )
-	  
+
       END IF ! first_run
 
       MODEL_JDATE = JDATE
@@ -712,25 +711,10 @@ C Get synchronization and advection time steps, TSTEP(2), ASTEP(L) and NREPS
 C science process sequence:
          
       myNREPS = myNREPS + NREPS
-	  
-C  open(139, file='ecj_conc.csv',access='APPEND')
-C  open(140, file='eci_conc.csv',access='APPEND')
-	  
+
       DO IREP = 1, NREPS
-	
-C       call csv_write(139, CGRID(45,45,1,139), .false.)
-C       call csv_write(139, JTIME, .false.)
-C       call csv_write(139, TSTEP(2), .false.)
-C       call csv_next_record(139)
-C       
-C       call csv_write(140, CGRID(45,45,1,140), .false.)
-C       call csv_write(140, JTIME, .false.)
-C       call csv_write(140, TSTEP(2), .false.)
-C       call csv_next_record(140)
-        
-	    
-        CALL SCIPROC ( CGRID, JDATE, JTIME, TSTEP, ASTEP )
-            
+
+            CALL SCIPROC ( CGRID, JDATE, JTIME, TSTEP, ASTEP )
 
 #ifndef mpas
 C Use trapezoidal rule to time-average data
@@ -774,12 +758,8 @@ C Use trapezoidal rule to time-average data
 #endif
 
 #endif
-		
+
       END DO
-
-C  close(139)
-C  close(140)
-
 
 #ifndef mpas
       IF ( MOD( TIME2SEC( JTIME ), TIME2SEC( TSTEP( 1 ) ) ) .EQ. 0 ) THEN
@@ -824,7 +804,7 @@ C  close(140)
 #endif
 
       END IF
- 	  
+
       DO V = 1, N_CSPCS
          S = CONC_MAP( V )
          SGRID( :,:,:,V ) = CGRID( :,:,CONC_BLEV:CONC_ELEV,S )
@@ -839,8 +819,8 @@ C write conc fields
          CALL CPU_TIME( REAL_TIME )
          CPU_TIME_START = REAL( REAL_TIME,8 )
 #endif
-C        CALL WR_CONC ( JDATE, JTIME, TSTEP( 1 ) )
-         
+         CALL WR_CONC ( JDATE, JTIME, TSTEP( 1 ) )
+
 #ifdef parallel
          IF ( LVEXT ) CALL WR_VEXT ( CGRID, JDATE, JTIME, TSTEP( 1 ) )
 #endif
@@ -849,7 +829,6 @@ C        CALL WR_CONC ( JDATE, JTIME, TSTEP( 1 ) )
          CALL WR_SA     ( JDATE, JTIME, TSTEP, 1 )
          CALL WR_AVG_SA ( JDATE, JTIME, TSTEP( 1 ) )
 #endif
-
 
 #ifdef sens
          CALL WR_ASENS ( JDATE, JTIME, TSTEP( 1 ) )
